@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <style>
+      body {
+        margin: 0;
+        /* Prevent scrolling while loading */
+        overflow: hidden;
+      }
+
+      /* --- PERSISTENT ELEMENTS --- */
+      .load-logo {
+        position: fixed;
+        top: calc(50vh - 240px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        z-index: 10000;
+      }
+
+      .load-title {
+        position: fixed;
+        bottom: calc(50vh - 240px); /* Mathematically identical to bottom: -40px on the container */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        z-index: 10000;
+        color: #fff; /* Explicitly white initially */
+      }
+
+      /* --- LOADER --- */
+      .load-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #111;
+        color: #fff;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .load-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 6px;
+        width: 0%;
+        background-color: #fff;
+      }
+
+      .load-content {
+        position: relative;
+        width: 300px;
+        height: 400px;
+        border: #fff 5px solid;
+      }
+
+      .load-img-w {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .load-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+      }
+
+      .load-img.is-1 {
+        opacity: 1;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .page-wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .mainimage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Persistent Global Logo and Title (Moved outside the wrapper) -->
+    <img class="load-logo" src="/src/images/whiteLOGO.png" alt="Logo" />
+    <div class="load-title">Photophactory.one</div>
+
+    <!-- The Loader Overlay -->
+    <div class="load-wrapper">
+      <div class="load-bar"></div>
+
+      <div class="load-content">
+        <!-- Image Sequence Wrapper -->
+        <div class="load-img-w">
+          <img class="load-img is-1" src="/src/images/DE.jpg" />
+          <img class="load-img is-2" src="/src/images/e1.jpg" />
+          <img class="load-img is-4" src="/src/images/e2.jpg" />
+          <img class="load-img is-5" src="/src/images/e3.jpg" />
+          <img class="load-img is-6" src="/src/images/e4.jpg" />
+          <img class="load-img is-7" src="/src/images/e5.jpg" />
+          <img class="load-img is-8" src="/src/images/e9.jpg" />
+          <img class="load-img is-9" src="/src/images/e10.jpg" />
+          <img class="load-img is-10" src="/src/images/ka2.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Your Main Page Content -->
+    <!-- Your Main Page Content -->
+    <div class="page-wrapper">
+      <router-link to="workwheel" class="main-link">
+        <img class="mainimage" src="/src/images/ka2.jpg" alt="Background" />
+      </router-link>
+    </div>
+
+    <!-- Load GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const tl = gsap.timeline()
+
+        // 1. Loading bar grows from left to right
+        tl.fromTo(
+          '.load-bar',
+          { width: '0%' },
+          { width: '100%', duration: 1.5, ease: 'power2.inOut' },
+        )
+
+        // 2. The Flipbook Effect
+        const images = document.querySelectorAll('.load-img')
+        const timePerImage = 0.2
+
+        const flashTl = gsap.timeline()
+        images.forEach((img, index) => {
+          if (index > 0) {
+            flashTl.set(images[index - 1], { opacity: 0 }, index * timePerImage)
+            flashTl.set(img, { opacity: 1 }, index * timePerImage)
+          }
+        })
+
+        tl.add(flashTl, 0.2)
+
+        // 3. Fade out the frame and bar (Removed .load-title and .load-logo from here)
+        tl.to(
+          ['.load-bar', '.load-frame'],
+          {
+            opacity: 0,
+            duration: 1,
+            ease: 'power2.out',
+          },
+          '+=0.2',
+        )
+
+        // 4. Expand the central image container
+        tl.to(
+          '.load-content',
+          {
+            width: '100vw',
+            height: '100vh',
+            minWidth: '100vw',
+            minHeight: '100vh',
+            duration: 3,
+            ease: 'expo.inOut',
+          },
+          '<',
+        )
+
+        // 5. SHRINK & MOVE LOGO TO TOP
+        tl.to(
+          '.load-logo',
+          {
+            top: '30px',
+            width: '120px',
+            duration: 3,
+            ease: 'expo.inOut',
+          },
+          '<',
+        )
+
+        // 6. MOVE TITLE TO BOTTOM (Removed width constraint so long text doesn't wrap weirdly)
+        tl.to(
+          '.load-title',
+          {
+            bottom: '30px',
+            duration: 3,
+            ease: 'expo.inOut',
+          },
+          '<',
+        )
+
+        // 7. Fade out the dark wrapper background
+        tl.to(
+          '.load-wrapper',
+          {
+            opacity: 0,
+            duration: 0.2,
+            ease: 'power2.inOut',
+            onComplete: () => {
+              gsap.set('.load-wrapper', { display: 'none' })
+              gsap.set('body', { overflow: 'auto' })
+            },
+          },
+          '-=0.4',
+        )
+
+        // 8. TURN LOGO AND TEXT BLACK AT THE END
+        tl.to(
+          '.load-logo',
+          {
+            filter: 'invert(1)', // Perfect for white PNGs
+            duration: 1,
+            ease: 'power2.inOut',
+          },
+          '-=1',
+        )
+
+        tl.to(
+          '.load-title',
+          {
+            color: '#000000', // Animating text color directly keeps it crisp
+            duration: 1,
+            ease: 'power2.inOut',
+          },
+          '<', // Runs at the exact same time as the logo inversion
+        )
+      })
+    </script>
+  </body>
+</html>
