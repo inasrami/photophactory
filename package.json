@@ -10,13 +10,18 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
+    "three": "^0.186.1",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "prettier": "3.9.6",
+    "tailwindcss": "^4.3.3",
     "vite": "^8.2.2",
     "vite-plugin-vue-devtools": "^8.2.1"
   },

@@ -15,10 +15,10 @@
       /* --- PERSISTENT ELEMENTS --- */
       .load-logo {
         position: fixed;
-        top: calc(50vh - 240px);
+        top: calc(50vh - 90px);
         left: 50%;
         transform: translateX(-50%);
-        width: 300px;
+        width: 150px;
         z-index: 10000;
       }
 
@@ -42,7 +42,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: #111;
+        background-image: url('/src/images/background.png');
         color: #fff;
         z-index: 9999;
         display: flex;
@@ -118,26 +118,22 @@
       <div class="load-content">
         <!-- Image Sequence Wrapper -->
         <div class="load-img-w">
-          <img class="load-img is-1" src="/src/images/DE.jpg" />
-          <img class="load-img is-2" src="/src/images/e1.jpg" />
-          <img class="load-img is-4" src="/src/images/e2.jpg" />
-          <img class="load-img is-5" src="/src/images/e3.jpg" />
-          <img class="load-img is-6" src="/src/images/e4.jpg" />
-          <img class="load-img is-7" src="/src/images/e5.jpg" />
-          <img class="load-img is-8" src="/src/images/e9.jpg" />
-          <img class="load-img is-9" src="/src/images/e10.jpg" />
-          <img class="load-img is-10" src="/src/images/ka2.jpg" />
+          <img class="load-img is-1" src="/src/images/portraits/Borislava/b1.jpg" />
+          <img class="load-img is-2" src="/src/images/portraits/cowgirl - Kalina/ka1.jpg" />
+          <img class="load-img is-4" src="/src/images/portraits/Elenac/ec1.jpg" />
+          <img class="load-img is-5" src="/src/images/portraits/Elena/e1.jpg" />
+          <img class="load-img is-6" src="/src/images/portraits/Valeto/v1.jpg" />
+          <img class="load-img is-7" src="/src/images/portraits/Vika/vp1.jpg" />
+          <img class="load-img is-8" src="/src/images/portraits/Vika/vp2.jpg" />
+          <img class="load-img is-9" src="/src/images/portraits/Vikaskilim/DVK.jpg" />
+          <img class="load-img is-10" src="/src/images/portraits/Vikaskilim/GVK.jpg" />
         </div>
       </div>
     </div>
 
     <!-- Your Main Page Content -->
-    <!-- Your Main Page Content -->
-    <div class="page-wrapper">
-      <router-link to="workwheel" class="main-link">
-        <img class="mainimage" src="/src/images/ka2.jpg" alt="Background" />
-      </router-link>
-    </div>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
 
     <!-- Load GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>

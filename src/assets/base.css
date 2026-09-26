@@ -33,6 +33,10 @@
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
 
+  /* extra tokens used by HeroSection/WorksWheel below */
+  --color-muted: var(--vt-c-white-mute);
+  --color-muted-foreground: rgba(60, 60, 60, 0.66);
+
   --section-gap: 160px;
 }
 
@@ -47,6 +51,9 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    --color-muted: var(--vt-c-black-mute);
+    --color-muted-foreground: rgba(235, 235, 235, 0.64);
   }
 }
 
