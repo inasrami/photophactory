@@ -4,87 +4,190 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" as="image" href="/src/images/logoLoader.png" />
+    <link rel="preload" as="image" href="/src/images/fon.png" />
     <title>Vite App</title>
     <style>
+      :root {
+        --ink: #0a0a10;
+        /* logo width; its height is width * 710 / 864 */
+        --w: clamp(210px, 36vw, 400px);
+      }
+
       body {
         margin: 0;
         /* Prevent scrolling while loading */
         overflow: hidden;
       }
 
-      /* --- PERSISTENT ELEMENTS --- */
+      /* --- LOADER BACKDROP (lifts away at the end) --- */
+      .load-wrapper {
+        position: fixed;
+        inset: 0;
+        height: 100vh;
+        height: 100dvh;
+        background: var(--ink);
+        z-index: 9999;
+        overflow: hidden;
+        will-change: transform;
+      }
+
+      .load-bg {
+        position: absolute;
+        inset: 0;
+        background: url('/src/images/fon.png') center / cover no-repeat;
+      }
+
+      /* keeps the white logo readable on top of any background image */
+      .load-shade {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(10, 10, 16, 0.3) 0%,
+          rgba(10, 10, 16, 0.78) 100%
+        );
+      }
+
+      /* --- PERSISTENT ELEMENTS (sit above the backdrop) --- */
+      .load-glow {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: calc(var(--w) * 1.5);
+        aspect-ratio: 1;
+        margin: calc(var(--w) * -0.75) 0 0 calc(var(--w) * -0.75);
+        opacity: 0;
+        z-index: 10000;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .load-glow .ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(#ff3d9a, #8a5cff, #3c82ff, #33d1ff, #ffb020, #ff6e40, #ff3d9a);
+        /* soft edge without blur(): much cheaper to render */
+        -webkit-mask-image: radial-gradient(closest-side, #000 20%, transparent 100%);
+        mask-image: radial-gradient(closest-side, #000 20%, transparent 100%);
+        animation: ring-spin 16s linear infinite;
+        will-change: transform;
+      }
+
+      @keyframes ring-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       .load-logo {
         position: fixed;
-        top: calc(50vh - 90px);
         left: 50%;
-        transform: translateX(-50%);
-        width: 150px;
+        top: 50%;
+        width: var(--w);
+        aspect-ratio: 864 / 710;
+        transform: translate(-50%, -50%);
         z-index: 10000;
+        will-change: transform;
+      }
+
+      /* final resting place of the logo (no animation needed anymore) */
+      .load-logo.is-docked {
+        top: 28px;
+        width: 110px;
+        transform: translateX(-50%);
+        will-change: auto;
+      }
+
+      /* one of the six lens shapes, cut out of logoLoader.png by JS */
+      .slice {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        background: url('/src/images/logoLoader.png') no-repeat;
+        opacity: 0;
+        will-change: transform, opacity;
+      }
+
+      .load-logo.is-static .slice,
+      .load-logo.is-docked .slice {
+        opacity: 1;
+      }
+
+      /* colored light behind one slice (opacity/transform only, no filters) */
+      .halo {
+        position: absolute;
+        top: -10%;
+        height: 120%;
+        transform: translateX(-50%);
+        opacity: 0;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .load-logo.is-docked .halo {
+        display: none;
+      }
+
+      .load-progress {
+        position: fixed;
+        left: 50%;
+        top: calc(50% + var(--w) * 0.411 + 34px);
+        width: min(220px, 50vw);
+        transform: translateX(-50%);
+        z-index: 10000;
+        color: #fff;
+      }
+
+      .load-line {
+        height: 2px;
+        background: rgba(255, 255, 255, 0.22);
+        overflow: hidden;
+      }
+
+      .load-fill {
+        height: 100%;
+        transform: scaleX(0);
+        transform-origin: left center;
+        background: linear-gradient(90deg, #3c82ff, #ffb020);
+        will-change: transform;
+      }
+
+      .load-count {
+        margin-top: 12px;
+        text-align: center;
+        font-family: 'Fraunces', serif;
+        font-weight: 300;
+        font-size: 14px;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.85;
       }
 
       .load-title {
         position: fixed;
-        bottom: calc(50vh - 240px); /* Mathematically identical to bottom: -40px on the container */
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 28px;
+        left: 0;
         width: 100%;
         text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        z-index: 10000;
-        color: #fff; /* Explicitly white initially */
-      }
-
-      /* --- LOADER --- */
-      .load-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-image: url('/src/images/background.png');
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 300;
+        font-size: 16px;
+        letter-spacing: 0.04em;
         color: #fff;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .load-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 6px;
-        width: 0%;
-        background-color: #fff;
-      }
-
-      .load-content {
-        position: relative;
-        width: 300px;
-        height: 400px;
-        border: #fff 5px solid;
-      }
-
-      .load-img-w {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-
-      .load-img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        z-index: 10000;
         opacity: 0;
       }
 
-      .load-img.is-1 {
-        opacity: 1;
+      .load-title.is-on {
+        opacity: 0.9;
       }
 
       /* --- MAIN CONTENT --- */
@@ -104,149 +207,319 @@
         object-fit: cover;
         display: block;
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        .load-glow .ring {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <!-- Persistent Global Logo and Title (Moved outside the wrapper) -->
-    <img class="load-logo" src="/src/images/whiteLOGO.png" alt="Logo" />
+    <!-- Colored light behind the logo -->
+    <div class="load-glow"><div class="ring"></div></div>
+
+    <!-- Persistent Global Logo (six slices are added by the script) -->
+    <div class="load-logo" role="img" aria-label="Logo"></div>
+
+    <div class="load-progress" aria-hidden="true">
+      <div class="load-line"><div class="load-fill"></div></div>
+      <div class="load-count">0%</div>
+    </div>
+
     <div class="load-title">Photophactory.one</div>
 
     <!-- The Loader Overlay -->
     <div class="load-wrapper">
-      <div class="load-bar"></div>
-
-      <div class="load-content">
-        <!-- Image Sequence Wrapper -->
-        <div class="load-img-w">
-          <img class="load-img is-1" src="/src/images/portraits/Borislava/b1.jpg" />
-          <img class="load-img is-2" src="/src/images/portraits/cowgirl - Kalina/ka1.jpg" />
-          <img class="load-img is-4" src="/src/images/portraits/Elenac/ec1.jpg" />
-          <img class="load-img is-5" src="/src/images/portraits/Elena/e1.jpg" />
-          <img class="load-img is-6" src="/src/images/portraits/Valeto/v1.jpg" />
-          <img class="load-img is-7" src="/src/images/portraits/Vika/vp1.jpg" />
-          <img class="load-img is-8" src="/src/images/portraits/Vika/vp2.jpg" />
-          <img class="load-img is-9" src="/src/images/portraits/Vikaskilim/DVK.jpg" />
-          <img class="load-img is-10" src="/src/images/portraits/Vikaskilim/GVK.jpg" />
-        </div>
-      </div>
+      <div class="load-bg"></div>
+      <div class="load-shade"></div>
     </div>
 
     <!-- Your Main Page Content -->
     <div id="app"></div>
+
+    <!--
+      The loader runs on the browser's own animation engine (transform/opacity only),
+      so it keeps moving smoothly even while your app is busy mounting underneath.
+      It starts right away and does not wait for GSAP or the app.
+    -->
+    <script>
+      ;(() => {
+        const $ = (s) => document.querySelector(s)
+        const app = $('#app')
+        const wrapper = $('.load-wrapper')
+        const glow = $('.load-glow')
+        const logo = $('.load-logo')
+        const progress = $('.load-progress')
+        const fill = $('.load-fill')
+        const count = $('.load-count')
+        const title = $('.load-title')
+
+        /* ---------- SETTINGS ---------- */
+        const MIN_SECONDS = 2.8 // the loader never finishes faster than this
+        const INVERT_AT_END = true // logo + title turn black once the page shows; false = stay white
+        const END_WIDTH = 110 // must match .load-logo.is-docked width in the CSS
+        const END_TOP = 28 // must match .load-logo.is-docked top in the CSS
+        const MAX_WAIT = 9000 // ms: the loader always leaves after this, whatever happens
+
+        // light color behind each slice, left to right
+        const COLORS = [
+          [255, 61, 154],
+          [138, 92, 255],
+          [60, 130, 255],
+          [51, 209, 255],
+          [255, 176, 32],
+          [255, 110, 64],
+        ]
+
+        // pixel columns of the six shapes inside the original 1254px logo
+        const RUNS = [
+          [195, 263],
+          [289, 377],
+          [401, 573],
+          [681, 852],
+          [877, 965],
+          [991, 1058],
+        ]
+        const BX = 195 // left edge of the artwork in the original
+        const BW = 864 // artwork width (logoLoader.png is cropped to this)
+        const BH = 710 // artwork height
+        const RANK = [0, 1, 2, 2, 1, 0] // landing order: outer shapes first
+
+        const anims = []
+        const play = (el, keyframes, opts) => {
+          const a = el.animate(keyframes, { fill: 'both', ...opts })
+          anims.push(a)
+          return a
+        }
+
+        // hide the page while the loader is up (it is shown right before the reveal)
+        app.style.visibility = 'hidden'
+
+        let raf = 0
+        const dock = () => {
+          logo.classList.add('is-docked')
+          title.classList.add('is-on')
+          if (INVERT_AT_END) {
+            logo.style.filter = 'invert(1)'
+            title.style.color = '#000'
+          }
+          anims.forEach((a) => a.cancel())
+          cancelAnimationFrame(raf)
+          wrapper.style.display = 'none'
+          glow.style.display = 'none'
+          progress.style.display = 'none'
+          app.style.visibility = 'visible'
+          document.body.style.overflow = 'auto'
+        }
+
+        try {
+          /* ---------- BUILD THE SIX SLICES ---------- */
+          const halos = []
+          const slices = []
+          RUNS.forEach(([a, b], i) => {
+            const w = b - a + 1
+            const [r, g, bl] = COLORS[i]
+
+            const h = document.createElement('i')
+            h.className = 'halo'
+            h.style.left = (((a + b) / 2 - BX) / BW) * 100 + '%'
+            h.style.width = (w / BW) * 100 + 24 + '%'
+            h.style.background = `radial-gradient(closest-side, rgba(${r},${g},${bl},0.7), rgba(${r},${g},${bl},0))`
+            logo.appendChild(h)
+            halos.push(h)
+
+            const s = document.createElement('span')
+            s.className = 'slice'
+            s.style.left = ((a - BX) / BW) * 100 + '%'
+            s.style.width = (w / BW) * 100 + '%'
+            s.style.backgroundSize = `${(BW / w) * 100}% 100%`
+            s.style.backgroundPosition = `${((a - BX) / (BW - w)) * 100}% 0`
+            logo.appendChild(s)
+            slices.push(s)
+          })
+
+          /* ---------- READINESS: page, fonts, and the images you can see ---------- */
+          const pageReady =
+            document.readyState === 'complete'
+              ? Promise.resolve()
+              : new Promise((res) => window.addEventListener('load', res, { once: true }))
+          const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve()
+
+          // decode the on-screen images now (off the main thread) so the reveal does not stall
+          const decodeVisible = () => {
+            const imgs = [...app.querySelectorAll('img')].filter((img) => {
+              const r = img.getBoundingClientRect()
+              return r.top < window.innerHeight * 1.2 && r.bottom > 0
+            })
+            return Promise.allSettled(imgs.map((img) => (img.decode ? img.decode() : null)))
+          }
+
+          const ready = Promise.race([
+            Promise.all([pageReady, fontsReady]).then(decodeVisible),
+            new Promise((res) => setTimeout(res, MAX_WAIT)),
+          ])
+
+          /* ---------- REDUCED MOTION: no animation, just a quick fade ---------- */
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            logo.classList.add('is-static')
+            title.classList.add('is-on')
+            ready.then(() => {
+              const fades = [wrapper, glow, progress].map((el) =>
+                el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }),
+              )
+              app.style.visibility = 'visible'
+              Promise.all(fades.map((f) => f.finished)).then(dock)
+            })
+            return
+          }
+
+          /* ---------- INTRO ---------- */
+          slices.forEach((s, i) => {
+            const dir = i % 2 ? 90 : -90
+            play(
+              s,
+              [
+                { opacity: 0, transform: `translateY(${dir}px) scaleY(0.7)` },
+                { opacity: 1, transform: 'translateY(0) scaleY(1)' },
+              ],
+              {
+                duration: 1000,
+                delay: 200 + RANK[i] * 140,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              },
+            )
+            play(
+              halos[i],
+              [
+                { opacity: 0, transform: 'translateX(-50%) scale(0.6)' },
+                { opacity: 1, transform: 'translateX(-50%) scale(1)' },
+              ],
+              {
+                duration: 1000,
+                delay: 350 + RANK[i] * 140,
+                easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+              },
+            )
+          })
+
+          play(
+            glow,
+            [
+              { opacity: 0, transform: 'scale(0.6)' },
+              { opacity: 0.45, transform: 'scale(1)' },
+            ],
+            { duration: 1000, delay: 500, easing: 'ease-out' },
+          )
+          play(title, [{ opacity: 0 }, { opacity: 0.9 }], {
+            duration: 1200,
+            delay: 1000,
+            easing: 'ease-out',
+          })
+
+          // progress bar: runs to 90% on a timer, the last 10% is earned by real loading
+          const bar = play(fill, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(0.9)' }], {
+            duration: MIN_SECONDS * 1000,
+            delay: 100,
+            easing: 'cubic-bezier(0.45, 0, 0.55, 1)',
+          })
+          let finishBar = null
+          let shown = -1
+          const tick = () => {
+            const t = (a) => a.effect.getComputedTiming().progress || 0
+            const p = finishBar ? 90 + t(finishBar) * 10 : t(bar) * 90
+            const n = Math.round(p)
+            if (n !== shown) {
+              shown = n
+              count.textContent = n + '%'
+            }
+            raf = requestAnimationFrame(tick)
+          }
+          raf = requestAnimationFrame(tick)
+
+          /* ---------- OUTRO: waits for the timer AND the page ---------- */
+          Promise.all([bar.finished, ready]).then(async () => {
+            finishBar = play(fill, [{ transform: 'scaleX(0.9)' }, { transform: 'scaleX(1)' }], {
+              duration: 350,
+              easing: 'ease-out',
+            })
+            await finishBar.finished
+
+            app.style.visibility = 'visible' // already decoded, safe to show under the curtain
+
+            const scale = END_WIDTH / logo.offsetWidth
+            const dy = END_TOP + (END_WIDTH * BH) / BW / 2 - window.innerHeight / 2
+            const out = []
+
+            halos.forEach((h) =>
+              out.push(
+                play(h, [{ opacity: 1 }, { opacity: 0 }], { duration: 800, easing: 'ease-out' }),
+              ),
+            )
+            out.push(
+              play(glow, [{ opacity: 0.45 }, { opacity: 0 }], {
+                duration: 800,
+                easing: 'ease-out',
+              }),
+            )
+            out.push(
+              play(progress, [{ opacity: 1 }, { opacity: 0 }], {
+                duration: 400,
+                easing: 'ease-out',
+              }),
+            )
+
+            // logo travels to the top while the backdrop lifts away like a curtain
+            out.push(
+              play(
+                logo,
+                [
+                  { transform: 'translate(-50%, -50%)' },
+                  { transform: `translate(-50%, -50%) translateY(${dy}px) scale(${scale})` },
+                ],
+                { duration: 1600, delay: 200, easing: 'cubic-bezier(0.87, 0, 0.13, 1)' },
+              ),
+            )
+            out.push(
+              play(wrapper, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], {
+                duration: 1400,
+                delay: 350,
+                easing: 'cubic-bezier(0.87, 0, 0.13, 1)',
+              }),
+            )
+
+            // color change happens after the logo has landed
+            if (INVERT_AT_END) {
+              out.push(
+                play(logo, [{ filter: 'invert(0)' }, { filter: 'invert(1)' }], {
+                  duration: 600,
+                  delay: 1700,
+                  easing: 'ease-in-out',
+                }),
+              )
+              out.push(
+                play(title, [{ color: '#fff' }, { color: '#000' }], {
+                  duration: 600,
+                  delay: 1700,
+                  easing: 'ease-in-out',
+                }),
+              )
+            }
+
+            await Promise.all(out.map((a) => a.finished))
+            dock()
+          })
+        } catch (err) {
+          // never leave the visitor stuck behind a broken loader
+          console.error('Loader failed, skipping it:', err)
+          dock()
+        }
+      })()
+    </script>
+
     <script type="module" src="/src/main.js"></script>
 
-    <!-- Load GSAP -->
+    <!-- GSAP (kept in case your app uses it; the loader itself no longer needs it) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const tl = gsap.timeline()
-
-        // 1. Loading bar grows from left to right
-        tl.fromTo(
-          '.load-bar',
-          { width: '0%' },
-          { width: '100%', duration: 1.5, ease: 'power2.inOut' },
-        )
-
-        // 2. The Flipbook Effect
-        const images = document.querySelectorAll('.load-img')
-        const timePerImage = 0.2
-
-        const flashTl = gsap.timeline()
-        images.forEach((img, index) => {
-          if (index > 0) {
-            flashTl.set(images[index - 1], { opacity: 0 }, index * timePerImage)
-            flashTl.set(img, { opacity: 1 }, index * timePerImage)
-          }
-        })
-
-        tl.add(flashTl, 0.2)
-
-        // 3. Fade out the frame and bar (Removed .load-title and .load-logo from here)
-        tl.to(
-          ['.load-bar', '.load-frame'],
-          {
-            opacity: 0,
-            duration: 1,
-            ease: 'power2.out',
-          },
-          '+=0.2',
-        )
-
-        // 4. Expand the central image container
-        tl.to(
-          '.load-content',
-          {
-            width: '100vw',
-            height: '100vh',
-            minWidth: '100vw',
-            minHeight: '100vh',
-            duration: 3,
-            ease: 'expo.inOut',
-          },
-          '<',
-        )
-
-        // 5. SHRINK & MOVE LOGO TO TOP
-        tl.to(
-          '.load-logo',
-          {
-            top: '30px',
-            width: '120px',
-            duration: 3,
-            ease: 'expo.inOut',
-          },
-          '<',
-        )
-
-        // 6. MOVE TITLE TO BOTTOM (Removed width constraint so long text doesn't wrap weirdly)
-        tl.to(
-          '.load-title',
-          {
-            bottom: '30px',
-            duration: 3,
-            ease: 'expo.inOut',
-          },
-          '<',
-        )
-
-        // 7. Fade out the dark wrapper background
-        tl.to(
-          '.load-wrapper',
-          {
-            opacity: 0,
-            duration: 0.2,
-            ease: 'power2.inOut',
-            onComplete: () => {
-              gsap.set('.load-wrapper', { display: 'none' })
-              gsap.set('body', { overflow: 'auto' })
-            },
-          },
-          '-=0.4',
-        )
-
-        // 8. TURN LOGO AND TEXT BLACK AT THE END
-        tl.to(
-          '.load-logo',
-          {
-            filter: 'invert(1)', // Perfect for white PNGs
-            duration: 1,
-            ease: 'power2.inOut',
-          },
-          '-=1',
-        )
-
-        tl.to(
-          '.load-title',
-          {
-            color: '#000000', // Animating text color directly keeps it crisp
-            duration: 1,
-            ease: 'power2.inOut',
-          },
-          '<', // Runs at the exact same time as the logo inversion
-        )
-      })
-    </script>
   </body>
 </html>

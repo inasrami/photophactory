@@ -1,6 +1,7 @@
 <script setup>
 import HeroSection from '@/components/HeroSection.vue'
 import Workwheel from '@/components/workwheel.vue'
+import myCustomBg from '@/images/fon.jpg'
 
 import deImg from '@/images/portraits/Borislava/b3.jpg'
 import e1 from '@/images/portraits/Elena/e3.jpg'
@@ -30,7 +31,8 @@ const WORKS = [
   <main>
     <HeroSection />
     <div id="works" class="h-screen w-full">
-      <Workwheel :items="WORKS" />
+      <!-- Pass the imported background image here -->
+      <Workwheel :items="WORKS" :backgroundImage="myCustomBg" />
     </div>
   </main>
 </template>

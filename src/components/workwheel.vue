@@ -1,38 +1,43 @@
 <template>
-    <div :class="[
-        'relative h-full min-h-[420px] w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-black/20',
-        className,
-    ]" :style="{ background, color: '#111111', ...style }" tabindex="0" role="region" aria-roledescription="carousel"
-        :aria-labelledby="labelId" @keydown="onKeyDown">
-        <p :id="labelId" class="sr-only">Liquid glass project carousel</p>
-        <p :id="liveId" class="sr-only" aria-live="polite">
+    <div :style="{
+        position: 'relative',
+        width: '100%',
+        height: '100vh',
+        minHeight: '420px',
+        overflow: 'hidden',
+        background: backgroundImage ? `url(${backgroundImage}) center / cover no-repeat` : background,
+        color: '#111111',
+        ...style
+    }" tabindex="0" role="region" aria-roledescription="carousel" :aria-labelledby="labelId" @keydown="onKeyDown">
+        <p :id="labelId" style="display: none;">Liquid glass project carousel</p>
+        <p :id="liveId" style="display: none;" aria-live="polite">
             {{ currentItem?.title ?? "" }}, {{ pad(active + 1) }} of {{ pad(items.length) }}
             {{ focused ? ", focused" : "" }}
         </p>
 
         <!-- WebGL Canvas or Fallback -->
         <div v-if="failed"
-            class="absolute inset-0 flex items-center justify-center bg-gray-100 p-4 text-center text-sm text-gray-500">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #6b7280;">
             This carousel needs WebGL, which is unavailable in this browser.
         </div>
-        <div v-else ref="mountRef" class="absolute inset-0"></div>
+        <div v-else ref="mountRef" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
 
         <p ref="titleRef"
-            class="pointer-events-none absolute left-1/2 top-[4.5%] z-10 m-0 text-center text-[15px] font-medium tracking-[-0.02em] text-black opacity-0 sm:text-[17px]">
+            style="pointer-events: none; position: absolute; left: 50%; top: 4.5%; z-index: 10; margin: 0; text-align: center; font-size: 15px; font-weight: 500; color: white; opacity: 0;">
             {{ currentItem?.title }}
         </p>
         <p ref="counterRef"
-            class="pointer-events-none absolute bottom-[6%] left-1/2 z-10 m-0 text-center text-[13px] font-medium tabular-nums tracking-[-0.02em] text-black opacity-0 sm:text-[15px]">
+            style="pointer-events: none; position: absolute; left: 50%; bottom: 6%; z-index: 10; margin: 0; text-align: center; font-size: 13px; font-weight: 500; color: white; opacity: 0;">
             {{ pad(active + 1) }}/{{ pad(items.length) }}
         </p>
 
         <div ref="cursorRef"
-            class="pointer-events-none absolute left-0 top-0 z-20 text-[13px] font-medium text-black mix-blend-exclusion">
+            style="pointer-events: none; position: absolute; left: 0; top: 0; z-index: 20; font-size: 13px; font-weight: 500; color: white; mix-blend-mode: exclusion;">
             View
         </div>
 
         <button type="button" @click="closeFocus" aria-label="Close focused project"
-            class="absolute right-[4%] top-[4.5%] z-20 text-[13px] font-medium text-black mix-blend-exclusion transition-opacity duration-300"
+            style="position: absolute; right: 4%; top: 4.5%; z-index: 20; font-size: 13px; font-weight: 500; color: white; mix-blend-mode: exclusion; transition: opacity 0.3s;"
             :style="{
                 opacity: focused ? 1 : 0,
                 pointerEvents: focused ? 'auto' : 'none',
@@ -45,8 +50,6 @@
 <script lang="ts">
 import type { CSSProperties } from "vue";
 
-// --- Types & Interfaces ---
-
 export interface LiquidGlassCarouselItem {
     src: string;
     title: string;
@@ -58,12 +61,11 @@ export interface LiquidGlassCarouselProps {
     panelHeight?: number;
     gap?: number;
     background?: string;
+    backgroundImage?: string;
     entry?: boolean;
     className?: string;
     style?: CSSProperties;
 }
-
-// --- Default Data ---
 
 const PORTRAIT_ASPECT = 3 / 4;
 const photo = (id: string) =>
@@ -86,13 +88,12 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, useId } from "vue";
 import { gsap } from "gsap";
 import * as THREE from "three";
 
-// --- Props & Emits ---
-
 const props = withDefaults(defineProps<LiquidGlassCarouselProps>(), {
     items: () => liquidGlassCarouselDefaultItems,
     panelHeight: 450,
     gap: 12,
-    background: "#ffffff",
+    background: "#111111",
+    backgroundImage: "",
     entry: true,
     className: "",
     style: () => ({}),
@@ -102,8 +103,6 @@ const emit = defineEmits<{
     (e: "activeChange", index: number): void;
     (e: "focusChange", focused: boolean): void;
 }>();
-
-// --- Constants & Shaders ---
 
 const LENS = {
     sizeX: 0.565, sizeY: 1, posX: 0.5, posY: 0.5, rotation: 65, spin: 0, zoom: 0, dispersion: 11,
@@ -175,7 +174,7 @@ float sdRoundBox(vec2 p, vec2 b, float r){
   return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
 }
 
-vec3 discLens(vec2 center, float aspectCorrect, out float outA) {
+vec4 discLens(vec2 center, float aspectCorrect, out float outA) {
   vec2 p = (vUv - center);
   p.x *= aspectCorrect;
   float ca = cos(uRotation), sa = sin(uRotation);
@@ -192,7 +191,7 @@ vec3 discLens(vec2 center, float aspectCorrect, out float outA) {
   } else {
     maskND = dist;
   }
-  if (maskND > 1.0) return vec3(0.0);
+  if (maskND > 1.0) return vec4(0.0);
 
   float shapeND = clamp(maskND, 0.0, 1.0);
   float nd = clamp(dist, 0.0, 1.0);
@@ -215,46 +214,52 @@ vec3 discLens(vec2 center, float aspectCorrect, out float outA) {
   int N = uSamples;
   if (N < 2) N = 2;
   if (N > MAX_SAMPLES) N = MAX_SAMPLES;
-  vec3 col = vec3(0.0);
+  
+  vec4 col = vec4(0.0);
   vec3 caW = vec3(0.0);
   for (int i = 0; i < MAX_SAMPLES; i++) {
     if (i >= N) break;
     float t = float(i) / float(N - 1);
     vec2 sUV = baseUV + dispDir * (t - 0.5);
-    vec3 s = texture2D(uTex, sUV).rgb;
+    vec4 s = texture2D(uTex, sUV);
     vec3 w = vec3(
       exp(-pow((t - 0.00) / 0.38, 2.0)),
       exp(-pow((t - 0.50) / 0.38, 2.0)),
       exp(-pow((t - 1.00) / 0.38, 2.0))
     );
-    col += s * w;
+    col.rgb += s.rgb * w;
+    col.a += s.a * w.y;
     caW += w;
   }
-  col /= max(caW, vec3(0.001));
+  col.rgb /= max(caW, vec3(0.001));
+  col.a /= max(caW.y, 0.001);
 
   float blurFade = 1.0 - smoothstep(0.72, 0.98, nd);
   if (uBlur > 0.01 && blurFade > 0.01) {
     vec2 blurRad = vec2(uBlur) / uRes * blurFade;
-    vec3 bcol = vec3(0.0);
+    vec4 bcol = vec4(0.0);
     float btw = 0.0;
     for (float a = 0.0; a < PI * 2.0; a += PI * 2.0 / 6.0) {
       for (float rr = 0.4; rr <= 1.001; rr += 0.3) {
         vec2 o = vec2(cos(a), sin(a)) * blurRad * rr;
         float w = 1.0 - rr * 0.38;
-        bcol += texture2D(uTex, baseUV + o).rgb * w;
+        bcol += texture2D(uTex, baseUV + o) * w;
         btw += w;
       }
     }
     col = mix(bcol / btw, col, rimMask);
   }
 
-  col *= mix(0.91, 1.0, smoothstep(0.0, 0.38, shapeND));
+  col.rgb *= mix(0.91, 1.0, smoothstep(0.0, 0.38, shapeND));
+
+  // Sharpen the alpha mask to ensure effects don't bleed into transparent background
+  float alphaMask = clamp(col.a * 1.5, 0.0, 1.0); 
 
   float r2 = shapeND * shapeND * 0.25;
   float gs = max(uNovaSize * uGlow * 0.003, 0.004);
   float nova = exp(-r2 / gs) + exp(-r2 / (gs * 7.0)) * 0.18;
   nova *= uWhiteGlow * (uGlow / 17.0) * 1.15;
-  col += vec3(nova);
+  col.rgb += vec3(nova) * alphaMask;
 
   float dC = shapeND * 0.5;
   float tR = clamp(uRingRadius, 0.1, 0.49);
@@ -263,27 +268,30 @@ vec3 discLens(vec2 center, float aspectCorrect, out float outA) {
   ring *= uBlueRing * (uGlow / 17.0) * 1.8;
   if (uShimmer > 0.5) ring *= sin(angle * uShimmerFreq + uTime * uShimmerSpeed) * uShimmerDepth + (1.0 - uShimmerDepth);
   float ringAura = exp(-pow((dC - tR) / (rW * 6.0), 2.0)) * 0.28 * uBlueRing * (uGlow / 17.0);
-  col += uBlueColor * (ring + ringAura);
-  col += vec3(exp(-pow((dC - uRimLinePos) / max(uRimLineWidth, 0.0001), 2.0)) * uRimLine);
+  
+  col.rgb += uBlueColor * (ring + ringAura) * alphaMask;
+  col.rgb += vec3(exp(-pow((dC - uRimLinePos) / max(uRimLineWidth, 0.0001), 2.0)) * uRimLine) * alphaMask;
 
   outA = smoothstep(1.0, 0.93, maskND);
   return col;
 }
 
 void main(){
-  vec3 base = texture2D(uTex, vUv).rgb;
-  vec3 outc = base;
+  vec4 base = texture2D(uTex, vUv);
+  vec4 outc = base;
   float a = 0.0;
-  vec3 c = discLens(uCenter, uAspect, a);
+  vec4 c = discLens(uCenter, uAspect, a);
   outc = mix(outc, c, a);
+  
   if (uVignette > 0.001) {
     vec2 vc = vUv - 0.5;
     vc.x *= uAspect;
     float d = length(vc) / max(uVignetteSize, 0.0001);
     float vig = 1.0 - uVignette * smoothstep(0.5, 1.0, d);
-    outc *= clamp(vig, 0.0, 1.0);
+    outc.rgb *= clamp(vig, 0.0, 1.0);
   }
-  gl_FragColor = vec4(outc, 1.0);
+  
+  gl_FragColor = outc; 
 }
 `;
 
@@ -313,8 +321,6 @@ type LiquidGlassCarouselHandle = {
     destroy: () => void;
 };
 
-// --- Utilities ---
-
 function prefersReducedMotion() {
     return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -332,8 +338,6 @@ function hexToNumber(background: string) {
 function pad(value: number) {
     return String(value).padStart(2, "0");
 }
-
-// --- Component Logic ---
 
 const mountRef = ref<HTMLDivElement | null>(null);
 const cursorRef = ref<HTMLDivElement | null>(null);
@@ -378,6 +382,7 @@ onMounted(() => {
         panelHeight: props.panelHeight,
         gap: props.gap,
         background: props.background,
+        backgroundImage: props.backgroundImage,
         entry: props.entry,
         onActiveChange: (index) => {
             active.value = index;
@@ -407,7 +412,6 @@ onBeforeUnmount(() => {
     }
 });
 
-// Animations Watcher
 watch([focused, entryDone, () => props.entry], () => {
     const title = titleRef.value;
     const counter = counterRef.value;
@@ -440,8 +444,6 @@ watch([focused, entryDone, () => props.entry], () => {
     gsap.to(counter, { autoAlpha: focused.value ? 0 : 1, duration: reduced ? 0 : 0.4, ease: "power3.out" });
 });
 
-// --- Core Engine Logic ---
-
 function createCarousel(
     mount: HTMLElement,
     cursorElement: HTMLElement | null,
@@ -450,6 +452,7 @@ function createCarousel(
         panelHeight: number;
         gap: number;
         background: string;
+        backgroundImage: string;
         entry: boolean;
         onActiveChange: (index: number) => void;
         onFocusChange: (open: boolean) => void;
@@ -480,7 +483,8 @@ function createCarousel(
 
     let renderer: THREE.WebGLRenderer;
     try {
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        // FORCE ALPHA TO TRUE FOR TRANSPARENT CANVAS
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
         return null;
     }
@@ -488,11 +492,13 @@ function createCarousel(
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(dpr);
     renderer.setSize(W, H);
-    renderer.setClearColor(hexToNumber(options.background), 1);
+
+    // FORCE CLEAR COLOR TO COMPLETELY TRANSPARENT (0 alpha)
+    renderer.setClearColor(0x000000, 0);
+
     renderer.domElement.style.display = "block";
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
-    renderer.domElement.style.touchAction = "none";
     renderer.domElement.style.userSelect = "none";
     renderer.domElement.setAttribute("aria-hidden", "true");
     mount.appendChild(renderer.domElement);
@@ -502,7 +508,6 @@ function createCarousel(
     camera.position.z = 10;
 
     const loader = new THREE.TextureLoader();
-    // REMOVED: loader.setCrossOrigin("anonymous"); // Sometimes blocks local Vite images
 
     const sources: Source[] = items.map((img) => {
         const s: Source = {
@@ -510,31 +515,28 @@ function createCarousel(
             aspect: img.aspect || PORTRAIT_ASPECT,
             locked: img.aspect != null,
         };
+
+        const imageUrl = typeof img.src === 'string' ? img.src : (img.src as any)?.default || img.src;
+
         loader.load(
-            img.src,
+            imageUrl,
             (tex) => {
-                // FIX: Disable mipmaps to allow ANY image dimension to render
                 tex.generateMipmaps = false;
                 tex.minFilter = THREE.LinearFilter;
                 tex.magFilter = THREE.LinearFilter;
 
                 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
                 tex.colorSpace = THREE.SRGBColorSpace;
-
                 if (!s.locked && tex.image) s.aspect = tex.image.width / tex.image.height;
                 s.tex = tex;
                 recomputeTotal();
-
                 if (!userInteracted) {
                     scroll = centerForIndex(0);
                     target = scroll;
                 }
-
-                // Let's also log a success message so we know it worked:
-                console.log("Successfully loaded:", img.title);
             },
             undefined,
-            (err) => console.error("Failed:", err)
+            (err) => console.error("Failed to load image:", imageUrl, err)
         );
         return s;
     });
@@ -600,7 +602,7 @@ function createCarousel(
     const pool: PoolItem[] = [];
     for (let r = 0; r < REPEATS; r++) {
         for (let i = 0; i < sources.length; i++) {
-            const mat = new THREE.MeshBasicMaterial({ color: 0xdddddd, transparent: true });
+            const mat = new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true });
             const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), mat);
             mesh.visible = false;
             scene.add(mesh);
@@ -618,7 +620,11 @@ function createCarousel(
     let lastInput = performance.now();
     let snapped = false;
 
-    const rt = new THREE.WebGLRenderTarget(W * dpr, H * dpr);
+    const rt = new THREE.WebGLRenderTarget(W * dpr, H * dpr, {
+        format: THREE.RGBAFormat,
+        type: THREE.UnsignedByteType,
+    });
+
     const lensScene = new THREE.Scene();
     const lensCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const lensUniforms = {
@@ -640,11 +646,14 @@ function createCarousel(
         uVignette: { value: LENS.vignette }, uVignetteSize: { value: LENS.vignetteSize },
         uSamples: { value: LENS.samples },
     };
+
     const lensMat = new THREE.ShaderMaterial({
         uniforms: lensUniforms as unknown as THREE.ShaderMaterial["uniforms"],
         vertexShader: LENS_VERTEX,
         fragmentShader: LENS_FRAGMENT,
+        transparent: true,
     });
+
     const lensQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), lensMat);
     lensScene.add(lensQuad);
 
@@ -854,8 +863,18 @@ function createCarousel(
     function inputLocked() { return focusState.active || entryActive || entrySettled; }
 
     function onWheel(e: WheelEvent) {
-        e.preventDefault();
         if (inputLocked()) return;
+
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+        const isVisible = (visibleHeight / rect.height) >= 0.75;
+        if (!isVisible) return;
+
+        const p = localPoint({ clientX: e.clientX, clientY: e.clientY });
+        if (!panelAtPointer(p.x, p.y)) return;
+
+        e.preventDefault();
         userInteracted = true;
         pendingFocus = null;
         target += (e.deltaY || e.deltaX) * WHEEL;
@@ -866,12 +885,20 @@ function createCarousel(
     function onPointerDown(e: PointerEvent) {
         suppressClick = false;
         if (inputLocked() || dragging) return;
+
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+        if ((visibleHeight / rect.height) < 0.75) return;
+
+        const p = localPoint(e);
+        if (!panelAtPointer(p.x, p.y)) return;
+
         if (e.button !== 0 && e.pointerType === "mouse") return;
         dragging = true;
         dragPointerId = e.pointerId;
         dragPointerType = e.pointerType || "mouse";
         try { el.setPointerCapture(e.pointerId); } catch { /* best-effort */ }
-        const p = localPoint(e);
         dragLastX = p.x;
         lastPointerX = p.x;
         lastPointerY = p.y;
@@ -884,6 +911,12 @@ function createCarousel(
         userInteracted = true;
         snapped = false;
         lastInput = dragMoveT;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+        if (dragging) {
+            e.preventDefault();
+        }
     }
 
     function onPointerMove(e: PointerEvent) {
@@ -1112,13 +1145,16 @@ function createCarousel(
     el.addEventListener("pointerleave", onLeave);
     el.addEventListener("click", onClick);
 
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+
     let raf = 0;
     let running = true;
-    let visible = true;
 
     function tick() {
         if (!running) return;
-        if (!visible || document.hidden) { raf = 0; return; }
+
+        if (document.hidden) { raf = 0; return; }
+
         if (!dragging) {
             target += velocity;
             velocity *= FRICTION;
@@ -1154,8 +1190,16 @@ function createCarousel(
             }
         }
 
+        const aspect = W / H;
+        lensUniforms.uAspect.value = aspect;
         lensUniforms.uCenter.value.set(LENS.posX, LENS.posY);
-        lensUniforms.uAspect.value = W / H;
+
+        if (aspect < 1) {
+            lensUniforms.uSizeX.value = 0.42 * aspect;
+        } else {
+            lensUniforms.uSizeX.value = LENS.sizeX;
+        }
+
         lensUniforms.uTime.value = performance.now() * 0.001;
         const rad = (a: number) => (a * Math.PI) / 180;
         lensUniforms.uRotation.value = rad(LENS.rotation) + rad(LENS.spin) * (performance.now() * 0.001);
@@ -1193,6 +1237,7 @@ function createCarousel(
         renderer.setPixelRatio(ratio);
         rt.setSize(W * ratio, H * ratio);
         lensUniforms.uRes.value.set(W * ratio, H * ratio);
+
         if (!userInteracted) {
             scroll = centerForIndex(0);
             target = scroll;
@@ -1201,13 +1246,7 @@ function createCarousel(
 
     const resizeObserver = new ResizeObserver(onResize);
     resizeObserver.observe(mount);
-    const intersection = new IntersectionObserver(([entry]) => {
-        const box = entry?.boundingClientRect;
-        if (!box || (box.width === 0 && box.height === 0)) return;
-        visible = entry?.isIntersecting ?? true;
-        if (visible) startLoop();
-    });
-    intersection.observe(mount);
+
     const onVisibility = () => { if (!document.hidden) startLoop(); };
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -1215,7 +1254,6 @@ function createCarousel(
         running = false;
         cancelAnimationFrame(raf);
         resizeObserver.disconnect();
-        intersection.disconnect();
         document.removeEventListener("visibilitychange", onVisibility);
         el.removeEventListener("wheel", onWheel);
         el.removeEventListener("pointerdown", onPointerDown);
@@ -1225,6 +1263,7 @@ function createCarousel(
         el.removeEventListener("pointerenter", onEnter);
         el.removeEventListener("pointerleave", onLeave);
         el.removeEventListener("click", onClick);
+        el.removeEventListener("touchmove", onTouchMove);
         if (focusState.anim) focusState.anim.kill();
         if (entryAnim) entryAnim.kill();
         if (cursorElement) gsap.killTweensOf(cursorElement);
