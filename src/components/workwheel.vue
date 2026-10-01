@@ -6,7 +6,7 @@
         minHeight: '420px',
         overflow: 'hidden',
         background: backgroundImage ? `url(${backgroundImage}) center / cover no-repeat` : background,
-        color: '#111111',
+        color: '#ffffff',
         ...style
     }" tabindex="0" role="region" aria-roledescription="carousel" :aria-labelledby="labelId" @keydown="onKeyDown">
         <p :id="labelId" style="display: none;">Liquid glass project carousel</p>
@@ -17,27 +17,27 @@
 
         <!-- WebGL Canvas or Fallback -->
         <div v-if="failed"
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #6b7280;">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111111; color: #ffffff;">
             This carousel needs WebGL, which is unavailable in this browser.
         </div>
         <div v-else ref="mountRef" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
 
         <p ref="titleRef"
-            style="pointer-events: none; position: absolute; left: 50%; top: 4.5%; z-index: 10; margin: 0; text-align: center; font-size: 15px; font-weight: 500; color: white; opacity: 0;">
+            style="pointer-events: none; position: absolute; left: 50%; top: 4.5%; z-index: 10; margin: 0; text-align: center; font-size: 15px; font-weight: 500; color: #ffffff; opacity: 0;">
             {{ currentItem?.title }}
         </p>
         <p ref="counterRef"
-            style="pointer-events: none; position: absolute; left: 50%; bottom: 6%; z-index: 10; margin: 0; text-align: center; font-size: 13px; font-weight: 500; color: white; opacity: 0;">
+            style="pointer-events: none; position: absolute; left: 50%; bottom: 6%; z-index: 10; margin: 0; text-align: center; font-size: 13px; font-weight: 500; color: #ffffff; opacity: 0;">
             {{ pad(active + 1) }}/{{ pad(items.length) }}
         </p>
 
         <div ref="cursorRef"
-            style="pointer-events: none; position: absolute; left: 0; top: 0; z-index: 20; font-size: 13px; font-weight: 500; color: white; mix-blend-mode: exclusion;">
+            style="pointer-events: none; position: absolute; left: 0; top: 0; z-index: 20; font-size: 13px; font-weight: 500; color: #ffffff;">
             View
         </div>
 
         <button type="button" @click="closeFocus" aria-label="Close focused project"
-            style="position: absolute; right: 4%; top: 4.5%; z-index: 20; font-size: 13px; font-weight: 500; color: white; mix-blend-mode: exclusion; transition: opacity 0.3s;"
+            style="position: absolute; right: 4%; top: 4.5%; z-index: 20; font-size: 13px; font-weight: 500; color: #ffffff; transition: opacity 0.3s;"
             :style="{
                 opacity: focused ? 1 : 0,
                 pointerEvents: focused ? 'auto' : 'none',
@@ -109,7 +109,7 @@ const LENS = {
     blur: 0, glow: 4.2, whiteGlow: 0.24, novaSize: 12, blueRing: 6, ringRadius: 0.49, ringWidth: 0.014,
     shimmer: true, shimmerFreq: 12, shimmerSpeed: 3.5, shimmerDepth: 0.12, rimStart: 0.578,
     rimTangential: 0.6, rimInward: 0, rimFreq1: 2, rimFreq2: 1, blueColor: "#009dff", rimLine: 1.4,
-    rimLinePos: 0.488, rimLineWidth: 0.003, vignette: 0, vignetteSize: 0.3, samples: 16,
+    rimLinePos: 0.488, rimLineWidth: 0.003, vignette: 0, vignetteSize: 0.3, samples: 8,
 };
 
 const FOCUS = {
@@ -272,16 +272,15 @@ vec4 discLens(vec2 center, float aspectCorrect, out float outA) {
   col.rgb += uBlueColor * (ring + ringAura) * alphaMask;
   col.rgb += vec3(exp(-pow((dC - uRimLinePos) / max(uRimLineWidth, 0.0001), 2.0)) * uRimLine) * alphaMask;
 
-  outA = smoothstep(1.0, 0.93, maskND);
+  outA = 1.0 - smoothstep(0.93, 1.0, maskND);
   return col;
 }
 
 void main(){
-  vec4 base = texture2D(uTex, vUv);
-  vec4 outc = base;
   float a = 0.0;
   vec4 c = discLens(uCenter, uAspect, a);
-  outc = mix(outc, c, a);
+  vec4 outc = c;
+  outc.a *= a;
   
   if (uVignette > 0.001) {
     vec2 vc = vUv - 0.5;
@@ -373,7 +372,9 @@ const onKeyDown = (event: KeyboardEvent) => {
     }
 };
 
-onMounted(() => {
+let cancelled = false;
+onMounted(() => requestAnimationFrame(() => {
+    if (cancelled) return;
     const mount = mountRef.value;
     if (!mount || props.items.length === 0) return;
 
@@ -403,9 +404,10 @@ onMounted(() => {
     }
 
     engineRef.value = engine;
-});
+}));
 
 onBeforeUnmount(() => {
+    cancelled = true;
     if (engineRef.value) {
         engineRef.value.destroy();
         engineRef.value = null;
@@ -484,12 +486,12 @@ function createCarousel(
     let renderer: THREE.WebGLRenderer;
     try {
         // FORCE ALPHA TO TRUE FOR TRANSPARENT CANVAS
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance" });
     } catch {
         return null;
     }
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr);
     renderer.setSize(W, H);
 
@@ -509,37 +511,64 @@ function createCarousel(
 
     const loader = new THREE.TextureLoader();
 
-    const sources: Source[] = items.map((img) => {
-        const s: Source = {
-            tex: null,
-            aspect: img.aspect || PORTRAIT_ASPECT,
-            locked: img.aspect != null,
-        };
+    const targetH = Math.min(1400, Math.round(options.panelHeight * FOCUS.centerScale * dpr));
 
-        const imageUrl = typeof img.src === 'string' ? img.src : (img.src as any)?.default || img.src;
+    const sources: Source[] = items.map((img) => ({
+        tex: null,
+        aspect: img.aspect || PORTRAIT_ASPECT,
+        locked: img.aspect != null,
+    }));
 
-        loader.load(
-            imageUrl,
-            (tex) => {
-                tex.generateMipmaps = false;
-                tex.minFilter = THREE.LinearFilter;
-                tex.magFilter = THREE.LinearFilter;
+    function finishTexture(s: Source, tex: THREE.Texture, w: number, h: number) {
+        if (!running) { tex.dispose(); return; }
+        tex.generateMipmaps = false;
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+        if (!s.locked) s.aspect = w / h;
+        s.tex = tex;
+        renderer.initTexture(tex); // upload now, in its own task, not inside a frame
+        recomputeTotal();
+        if (!userInteracted) {
+            scroll = centerForIndex(0);
+            target = scroll;
+        }
+    }
 
-                tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-                tex.colorSpace = THREE.SRGBColorSpace;
-                if (!s.locked && tex.image) s.aspect = tex.image.width / tex.image.height;
-                s.tex = tex;
-                recomputeTotal();
-                if (!userInteracted) {
-                    scroll = centerForIndex(0);
-                    target = scroll;
-                }
-            },
-            undefined,
-            (err) => console.error("Failed to load image:", imageUrl, err)
-        );
-        return s;
-    });
+    async function loadTexture(s: Source, img: LiquidGlassCarouselItem) {
+        const url = typeof img.src === "string" ? img.src : (img.src as any)?.default || img.src;
+        try {
+            if (typeof createImageBitmap === "function") {
+                const res = await fetch(url, { mode: "cors" });
+                if (!res.ok) throw new Error(String(res.status));
+                // decoded and downscaled off the main thread
+                const bmp = await createImageBitmap(await res.blob(), {
+                    resizeHeight: targetH,
+                    resizeQuality: "high",
+                    imageOrientation: "flipY",
+                });
+                const tex = new THREE.Texture(bmp);
+                tex.flipY = false;
+                finishTexture(s, tex, bmp.width, bmp.height);
+                return;
+            }
+        } catch { /* fall back to the normal loader below */ }
+        await new Promise<void>((resolve) => {
+            loader.load(
+                url,
+                (tex) => {
+                    finishTexture(s, tex, tex.image.width, tex.image.height);
+                    resolve();
+                },
+                undefined,
+                (err) => { console.error("Failed to load image:", url, err); resolve(); }
+            );
+        });
+    }
+
+    const loads = items.map((img, i) => loadTexture(at(sources, i), img));
+    const texturesReady = Promise.race([Promise.all(loads), new Promise((r) => setTimeout(r, 4000))]);
 
     function slotWidth(srcIndex: number) {
         return at(sources, srcIndex).aspect * PANEL_H + GAP;
@@ -599,12 +628,15 @@ function createCarousel(
     }
 
     let lastCenter = -1;
+    const planeGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
+    const placeholder = new THREE.DataTexture(new Uint8Array([51, 51, 51, 255]), 1, 1);
+    placeholder.colorSpace = THREE.SRGBColorSpace;
+    placeholder.needsUpdate = true;
     const pool: PoolItem[] = [];
     for (let r = 0; r < REPEATS; r++) {
         for (let i = 0; i < sources.length; i++) {
-            const mat = new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true });
-            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), mat);
-            mesh.visible = false;
+            const mat = new THREE.MeshBasicMaterial({ map: placeholder, transparent: true });
+            const mesh = new THREE.Mesh(planeGeo, mat);
             scene.add(mesh);
             pool.push({ mesh, mat, srcIndex: i, bound: false });
         }
@@ -708,8 +740,6 @@ function createCarousel(
 
             if (src.tex && !p.bound) {
                 p.mat.map = src.tex;
-                p.mat.color.set(0xffffff);
-                p.mat.needsUpdate = true;
                 p.bound = true;
             }
 
@@ -1147,13 +1177,20 @@ function createCarousel(
 
     el.addEventListener("touchmove", onTouchMove, { passive: false });
 
+    let inView = true;
+    const io = new IntersectionObserver(([e]) => {
+        inView = !!e?.isIntersecting;
+        if (inView) startLoop();
+    });
+    io.observe(mount);
+
     let raf = 0;
     let running = true;
 
     function tick() {
         if (!running) return;
 
-        if (document.hidden) { raf = 0; return; }
+        if (document.hidden || !inView) { raf = 0; return; }
 
         if (!dragging) {
             target += velocity;
@@ -1205,6 +1242,7 @@ function createCarousel(
         lensUniforms.uRotation.value = rad(LENS.rotation) + rad(LENS.spin) * (performance.now() * 0.001);
         const fx = focusState.lensFx;
         for (const key of LENS_FX_KEYS) lensUniforms[key].value = lensFxFull[key] * fx;
+        lensUniforms.uSamples.value = fx < 0.02 ? 2 : LENS.samples;
 
         renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
@@ -1218,9 +1256,19 @@ function createCarousel(
         raf = requestAnimationFrame(tick);
     }
 
-    startLoop();
-    if (entryOn) playEntry();
-    else options.onEntryDone(true);
+    // compile shaders without blocking, and wait for textures so the entry never plays on grey panels
+    const compiled = (renderer as any).compileAsync
+        ? Promise.all([
+            (renderer as any).compileAsync(scene, camera),
+            (renderer as any).compileAsync(lensScene, lensCam),
+        ]).catch(() => {})
+        : Promise.resolve();
+    Promise.all([texturesReady, compiled]).then(() => {
+        if (!running) return;
+        startLoop();
+        if (entryOn) playEntry();
+        else options.onEntryDone(true);
+    });
 
     function onResize() {
         W = Math.max(1, mount.clientWidth);
@@ -1233,7 +1281,7 @@ function createCarousel(
         camera.top = H / 2;
         camera.bottom = -H / 2;
         camera.updateProjectionMatrix();
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
         renderer.setPixelRatio(ratio);
         rt.setSize(W * ratio, H * ratio);
         lensUniforms.uRes.value.set(W * ratio, H * ratio);
@@ -1253,6 +1301,7 @@ function createCarousel(
     function destroy() {
         running = false;
         cancelAnimationFrame(raf);
+        io.disconnect();
         resizeObserver.disconnect();
         document.removeEventListener("visibilitychange", onVisibility);
         el.removeEventListener("wheel", onWheel);
@@ -1271,7 +1320,9 @@ function createCarousel(
         rt.dispose();
         lensQuad.geometry.dispose();
         lensMat.dispose();
-        pool.forEach((p) => { p.mesh.geometry.dispose(); p.mat.dispose(); });
+        pool.forEach((p) => { p.mat.dispose(); });
+        planeGeo.dispose();
+        placeholder.dispose();
         sources.forEach((s) => { s.tex?.dispose(); });
         if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
@@ -7,12 +7,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap"
       rel="stylesheet"
     />
-    <link rel="preload" as="image" href="/src/images/logoLoader.png" />
-    <link rel="preload" as="image" href="/src/images/fon.png" />
-    <title>Vite App</title>
+    <link rel="preload" as="image" href="/images/hero-portrait.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="/images/logoLoader.png" />
+    <link rel="preload" as="image" href="/images/loader-background.jpg" />
+    <meta
+      name="description"
+      content="Photophactory — concert, portrait, and people photography captured with feeling."
+    />
+    <title>Photophactory — Concert &amp; Portrait Photography</title>
     <style>
       :root {
         --ink: #0a0a10;
@@ -41,7 +46,8 @@
       .load-bg {
         position: absolute;
         inset: 0;
-        background: url('/src/images/fon.png') center / cover no-repeat;
+        background: url('/images/loader-background.jpg') center / cover no-repeat;
+        opacity: 0.24;
       }
 
       /* keeps the white logo readable on top of any background image */
@@ -50,8 +56,8 @@
         inset: 0;
         background: radial-gradient(
           ellipse at center,
-          rgba(10, 10, 16, 0.3) 0%,
-          rgba(10, 10, 16, 0.78) 100%
+          rgba(10, 10, 16, 0.35) 0%,
+          rgba(10, 10, 16, 0.88) 100%
         );
       }
 
@@ -98,29 +104,17 @@
         will-change: transform;
       }
 
-      /* final resting place of the logo (no animation needed anymore) */
-      .load-logo.is-docked {
-        top: 28px;
-        width: 110px;
-        transform: translateX(-50%);
-        will-change: auto;
-      }
-
       /* one of the six lens shapes, cut out of logoLoader.png by JS */
       .slice {
         position: absolute;
         top: 0;
         height: 100%;
-        background: url('/src/images/logoLoader.png') no-repeat;
+        background: url('/images/logoLoader.png') no-repeat;
         opacity: 0;
         will-change: transform, opacity;
       }
 
       .load-logo.is-static .slice,
-      .load-logo.is-docked .slice {
-        opacity: 1;
-      }
-
       /* colored light behind one slice (opacity/transform only, no filters) */
       .halo {
         position: absolute;
@@ -132,10 +126,6 @@
         will-change: transform, opacity;
       }
 
-      .load-logo.is-docked .halo {
-        display: none;
-      }
-
       .load-progress {
         position: fixed;
         left: 50%;
@@ -143,12 +133,12 @@
         width: min(220px, 50vw);
         transform: translateX(-50%);
         z-index: 10000;
-        color: #fff;
+        color: #ffffff;
       }
 
       .load-line {
         height: 2px;
-        background: rgba(255, 255, 255, 0.22);
+        background: rgba(255, 61, 154, 0.25);
         overflow: hidden;
       }
 
@@ -181,7 +171,7 @@
         font-weight: 300;
         font-size: 16px;
         letter-spacing: 0.04em;
-        color: #fff;
+        color: #ffffff;
         z-index: 10000;
         opacity: 0;
       }
@@ -256,11 +246,8 @@
         const title = $('.load-title')
 
         /* ---------- SETTINGS ---------- */
-        const MIN_SECONDS = 2.8 // the loader never finishes faster than this
-        const INVERT_AT_END = true // logo + title turn black once the page shows; false = stay white
-        const END_WIDTH = 110 // must match .load-logo.is-docked width in the CSS
-        const END_TOP = 28 // must match .load-logo.is-docked top in the CSS
-        const MAX_WAIT = 9000 // ms: the loader always leaves after this, whatever happens
+        const MIN_SECONDS = 0.9 // keep the intro brief; real loading still controls the reveal
+        const MAX_WAIT = 5000 // ms: never hold the page indefinitely
 
         // light color behind each slice, left to right
         const COLORS = [
@@ -298,17 +285,13 @@
 
         let raf = 0
         const dock = () => {
-          logo.classList.add('is-docked')
-          title.classList.add('is-on')
-          if (INVERT_AT_END) {
-            logo.style.filter = 'invert(1)'
-            title.style.color = '#000'
-          }
           anims.forEach((a) => a.cancel())
           cancelAnimationFrame(raf)
           wrapper.style.display = 'none'
           glow.style.display = 'none'
           progress.style.display = 'none'
+          logo.style.display = 'none'
+          title.style.display = 'none'
           app.style.visibility = 'visible'
           document.body.style.overflow = 'auto'
         }
@@ -447,8 +430,6 @@
 
             app.style.visibility = 'visible' // already decoded, safe to show under the curtain
 
-            const scale = END_WIDTH / logo.offsetWidth
-            const dy = END_TOP + (END_WIDTH * BH) / BW / 2 - window.innerHeight / 2
             const out = []
 
             halos.forEach((h) =>
@@ -469,42 +450,27 @@
               }),
             )
 
-            // logo travels to the top while the backdrop lifts away like a curtain
+            // Clear the temporary mark as the backdrop lifts away.
             out.push(
               play(
                 logo,
-                [
-                  { transform: 'translate(-50%, -50%)' },
-                  { transform: `translate(-50%, -50%) translateY(${dy}px) scale(${scale})` },
-                ],
-                { duration: 1600, delay: 200, easing: 'cubic-bezier(0.87, 0, 0.13, 1)' },
+                [{ opacity: 1 }, { opacity: 0 }],
+                { duration: 450, easing: 'ease-out' },
               ),
             )
             out.push(
+              play(title, [{ opacity: 0.9 }, { opacity: 0 }], {
+                duration: 350,
+                easing: 'ease-out',
+              }),
+            )
+            out.push(
               play(wrapper, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], {
-                duration: 1400,
-                delay: 350,
+                duration: 800,
+                delay: 100,
                 easing: 'cubic-bezier(0.87, 0, 0.13, 1)',
               }),
             )
-
-            // color change happens after the logo has landed
-            if (INVERT_AT_END) {
-              out.push(
-                play(logo, [{ filter: 'invert(0)' }, { filter: 'invert(1)' }], {
-                  duration: 600,
-                  delay: 1700,
-                  easing: 'ease-in-out',
-                }),
-              )
-              out.push(
-                play(title, [{ color: '#fff' }, { color: '#000' }], {
-                  duration: 600,
-                  delay: 1700,
-                  easing: 'ease-in-out',
-                }),
-              )
-            }
 
             await Promise.all(out.map((a) => a.finished))
             dock()
@@ -519,7 +485,5 @@
 
     <script type="module" src="/src/main.js"></script>
 
-    <!-- GSAP (kept in case your app uses it; the loader itself no longer needs it) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   </body>
 </html>

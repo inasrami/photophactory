@@ -1,246 +1,312 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import gsap from 'gsap'
-// import heroImage from '@/images/portraits/Vikaskilim/GVK.jpg'
-import heroImage from '@/images/fon1.png'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { gsap } from '@/lib/gsap'
+import { lenis } from '@/lib/lenis'
 
-const props = defineProps({
-  title: { type: String, default: 'Photophactory' },
-  tagline: { type: String, default: 'A studio for images that hold still.' },
-  image: { type: String, default: heroImage },
-})
+const root = ref(null)
+const viewWork = () => lenis.scrollTo('#rooms', { duration: 1.2 })
+const contact = () => lenis.scrollTo('#contact', { duration: 1.2 })
 
-const titleChars = computed(() => props.title.split(''))
-
-const irisRef = ref(null)
-const apertureRef = ref(null)
-const taglineRef = ref(null)
-const scrollRef = ref(null)
-const letterEls = []
-const setLetterRef = (el, i) => {
-  if (el) letterEls[i] = el
-}
-
-let tl = null
-
-const reducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-// A critically-damped settle (no overshoot) — this reveal is on-load, not
-// gesture-driven, so per Apple's own rule bounce has no business here.
-// Bounce is reserved for the one moment below that a person actually touches.
-const SETTLE = 'power3.out'
-
+let mm
 onMounted(() => {
-  if (reducedMotion()) {
-    // Reduced motion isn't "no feedback" — it's a gentler, non-vestibular
-    // equivalent: a short opacity cross-fade, no movement, no bounce.
-    if (irisRef.value) irisRef.value.style.display = 'none'
-    if (apertureRef.value) apertureRef.value.style.display = 'none'
-    gsap.set(letterEls, { y: 0, rotateX: 0 })
-    gsap.set([taglineRef.value, scrollRef.value], { y: 0 })
-    gsap.to([...letterEls, taglineRef.value, scrollRef.value], {
-      opacity: 1,
-      duration: 0.3,
-      ease: 'power1.out',
+  const q = gsap.utils.selector(root.value)
+  mm = gsap.matchMedia()
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    gsap.timeline({ defaults: { ease: 'expo.out' } })
+      .from(q('.hero-image'), { scale: 1.04, duration: 1.8 }, 0)
+      .from(q('.hero-eyebrow, .hero-copy, .hero-bottom'), {
+        opacity: 0,
+        y: 24,
+        duration: 0.9,
+        stagger: 0.12,
+      }, 0.2)
+
+    gsap.to(q('.hero-image'), {
+      yPercent: 7,
+      ease: 'none',
+      scrollTrigger: { trigger: root.value, start: 'top top', end: 'bottom top', scrub: 0.6 },
     })
-    return
-  }
-
-  const iris = { r: 0 }
-  tl = gsap.timeline({ defaults: { ease: 'power3.inOut' } })
-
-  tl.to(iris, {
-    r: 145,
-    duration: 1.3,
-    ease: 'power3.inOut',
-    onUpdate: () => {
-      if (irisRef.value) irisRef.value.style.clipPath = `circle(${iris.r}% at 50% 50%)`
-    },
-    onComplete: () => {
-      if (irisRef.value) irisRef.value.style.display = 'none'
-    },
   })
-    .to(
-      apertureRef.value,
-      { scale: 1.6, rotate: 35, opacity: 0, duration: 1.1, ease: 'power2.in' },
-      '<0.05',
-    )
-    .fromTo(
-      letterEls,
-      { yPercent: 120, rotateX: -45, opacity: 0 },
-      { yPercent: 0, rotateX: 0, opacity: 1, duration: 0.85, ease: SETTLE, stagger: 0.032 },
-      '-=0.65',
-    )
-    .fromTo(
-      taglineRef.value,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.7, ease: SETTLE },
-      '-=0.45',
-    )
-    .fromTo(scrollRef.value, { opacity: 0 }, { opacity: 1, duration: 0.6, ease: SETTLE }, '-=0.5')
 })
-
-onBeforeUnmount(() => {
-  tl?.kill()
-})
+onBeforeUnmount(() => mm?.revert())
 </script>
 
 <template>
-  <section class="hero">
-    <img :src="image" alt="" class="hero-photo" />
-    <div class="hero-scrim" />
-
-    <div ref="irisRef" class="hero-iris" aria-hidden="true" />
-    <svg ref="apertureRef" class="hero-aperture" viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.6"
-        stroke-dasharray="9 6" />
-      <circle cx="50" cy="50" r="19" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1" />
-    </svg>
-
-    <div class="hero-copy">
-      <h1 class="hero-title" aria-label="Photophactory">
-        <span v-for="(char, i) in titleChars" :key="i" class="hero-letter" :ref="(el) => setLetterRef(el, i)">{{ char
-          === ' ' ? '\u00A0' : char }}</span>
-      </h1>
-      <p ref="taglineRef" class="hero-tagline">{{ tagline }}</p>
+  <section ref="root" class="hero" aria-labelledby="hero-title">
+    <div class="hero-media" aria-hidden="true">
+      <img src="/images/hero-portrait.jpg" alt="" class="hero-image" fetchpriority="high" decoding="async" />
     </div>
+    <div class="hero-shade" aria-hidden="true" />
 
-    <a ref="scrollRef" href="#works" class="hero-scroll" aria-label="Scroll to work">
-      <svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true">
-        <path d="M6 1v10M2 7l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"
-          stroke-linejoin="round" />
-      </svg>
-    </a>
+    <div class="hero-inner">
+      <!-- <div class="hero-eyebrow">
+        <span class="hero-mark" aria-hidden="true">P.</span>
+        <span class="label">Photophactory · Independent photography</span>
+      </div> -->
+
+      <div class="hero-copy">
+        <!-- <p class="hero-overline label">Concerts / Portraits / People</p> -->
+        <h1 id="hero-title" class="hero-title">
+          The feeling<br />
+          of being <em>there.</em>
+        </h1>
+        <p class="hero-description">
+          Portraits and live music, held just as they felt.
+        </p>
+        <!-- <div class="hero-actions">
+          <a class="hero-button" href="#rooms" @click.prevent="viewWork">
+            Explore the stories <span aria-hidden="true">↘</span>
+          </a>
+          <a class="hero-link" href="#contact" @click.prevent="contact">
+            Book a session <span aria-hidden="true">↗</span>
+          </a>
+        </div> -->
+      </div>
+
+      <div class="hero-bottom">
+        <span class="hero-caption label">Honest frames, made to last</span>
+        <a class="hero-scroll label" href="#rooms" @click.prevent="viewWork">
+          Scroll to explore <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .hero {
+  --hero-accent: #c9a86a;
   position: relative;
-  width: 100%;
-  height: 100vh;
-  min-height: 560px;
+  isolation: isolate;
+  display: flex;
+  min-height: 42rem;
+  height: 100svh;
   overflow: hidden;
-  background: #0a0a0a;
-  color: #fff;
+  background: var(--ink);
+  color: var(--bone);
 }
 
-/* Static and untouched — the reveal happens in front of it, never to it */
-.hero-photo {
+.hero-media,
+.hero-shade {
   position: absolute;
   inset: 0;
+}
+
+.hero-media {
+  overflow: hidden;
+}
+
+.hero-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  object-position: 68% 48%;
+  will-change: transform;
 }
 
-.hero-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.35) 30%,
-      rgba(0, 0, 0, 0.06) 55%,
-      transparent 72%);
+.hero-shade {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgb(10 10 16 / 0.88) 0%, rgb(10 10 16 / 0.72) 30%, rgb(10 10 16 / 0.38) 55%, transparent 82%),
+    linear-gradient(0deg, rgb(10 10 16 / 0.55), transparent 45%);
 }
 
-/* Starts as a closed aperture, opens once on load, then removed from flow */
-.hero-iris {
-  position: absolute;
-  inset: 0;
+.hero-inner {
+  position: relative;
   z-index: 2;
-  background: #0a0a0a;
-  clip-path: circle(0% at 50% 50%);
-  pointer-events: none;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(7.5rem, 16vh, 10.5rem) 7vw clamp(2rem, 5vh, 3.5rem);
 }
 
-.hero-aperture {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 3;
-  width: 4.5rem;
-  height: 4.5rem;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hero-mark {
+  display: grid;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(239 233 223 / 0.35);
+  border-radius: 50%;
+  color: var(--hero-accent);
+  font: 1.35rem/1 var(--serif);
+}
+
+.hero-eyebrow .label {
+  letter-spacing: 0.17em;
 }
 
 .hero-copy {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  padding: 0 5% 6%;
+  width: min(100%, 52rem);
+  padding: 3rem 0;
+}
+
+.hero-overline {
+  margin-bottom: 1.5rem;
+  color: var(--hero-accent);
 }
 
 .hero-title {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
   margin: 0;
-  display: block;
-  font-family: 'Fraunces', 'Montserrat', serif;
-  font-style: italic;
-  font-weight: 560;
-  font-size: clamp(3rem, 11.5vw, 9.5rem);
-  line-height: 0.88;
-  /* tight leading — large display type wants less air */
-  letter-spacing: -0.015em;
-  /* negative tracking as size grows */
-  font-optical-sizing: auto;
-  /* Fraunces is a variable font — let its opsz axis do the work */
-  perspective: 800px;
+  text-align: left;
+  font: 400 clamp(4.25rem, 8vw, 8.8rem) / 0.88 var(--serif);
+  letter-spacing: -0.065em;
+  white-space: normal;
 }
 
-.hero-letter {
-  display: inline-block;
-  transform-origin: 50% 100%;
-}
-
-.hero-tagline {
-  margin: 1.1rem 0 0;
-  max-width: 26rem;
-  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+.hero-title em {
+  color: var(--hero-accent);
   font-weight: 400;
-  opacity: 0;
+}
+
+.hero-description {
+  max-width: 25rem;
+  margin-top: 1.6rem;
+  color: rgb(239 233 223 / 0.76);
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.8rem;
+  margin-top: 2rem;
+}
+
+.hero-button,
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.25rem;
+  font: 500 0.68rem/1 var(--sans);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.hero-button {
+  padding: 0 1.35rem;
+  border: 1px solid var(--bone);
+  background: var(--bone);
+  color: var(--ink);
+}
+
+.hero-button:hover {
+  border-color: var(--hero-accent);
+  background: var(--hero-accent);
+}
+
+.hero-link {
+  min-height: 2rem;
+  border-bottom: 1px solid rgb(239 233 223 / 0.48);
+}
+
+.hero-link:hover,
+.hero-scroll:hover {
+  color: var(--hero-accent);
+}
+
+.hero-button:focus-visible,
+.hero-link:focus-visible,
+.hero-scroll:focus-visible {
+  outline: 2px solid var(--hero-accent);
+  outline-offset: 5px;
+}
+
+.hero-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hero-caption {
+  color: rgb(239 233 223 / 0.68);
 }
 
 .hero-scroll {
-  position: absolute;
-  right: 5%;
-  bottom: 6%;
-  z-index: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 9999px;
-  color: #fff;
-  opacity: 0;
-  transform: scale(1);
-  transition:
-    border-color 0.2s,
-    /* release settles with a hair of bounce — this is the one moment
-       someone actually touches, so a little momentum feels right */
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  gap: 0.8rem;
+  transition: color 180ms ease;
 }
 
-.hero-scroll:hover {
-  border-color: #fff;
+.hero-scroll span {
+  color: var(--hero-accent);
+  font-size: 1rem;
 }
 
-.hero-scroll:active {
-  /* respond the instant the finger/cursor lands — never wait for release */
-  transform: scale(0.92);
-  transition: transform 0.08s linear;
-}
+@media (max-width: 700px) {
+  .hero {
+    min-height: 44rem;
+    height: 100svh;
+  }
 
-@media (max-width: 640px) {
+  .hero-image {
+    object-position: 70% 45%;
+  }
+
+  .hero-shade {
+    background:
+      linear-gradient(0deg, rgb(10 10 16 / 0.92) 0%, rgb(10 10 16 / 0.78) 30%, rgb(10 10 16 / 0.2) 68%, transparent 92%),
+      linear-gradient(90deg, rgb(10 10 16 / 0.2), transparent 80%);
+  }
+
+  .hero-inner {
+    padding: 7.5rem 1.35rem 1.5rem;
+  }
+
+  .hero-copy {
+    width: 100%;
+    padding: 1rem 0;
+  }
+
   .hero-title {
-    font-size: clamp(2.5rem, 13vw, 4.5rem);
+    font-size: clamp(3.6rem, 14vw, 6.2rem);
+  }
+
+  .hero-description {
+    max-width: 21rem;
+    margin-top: 1.2rem;
+  }
+
+  .hero-actions {
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .hero-bottom {
+    align-items: flex-end;
+  }
+
+  .hero-caption {
+    max-width: 10rem;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-eyebrow .label {
+    font-size: 0.58rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
