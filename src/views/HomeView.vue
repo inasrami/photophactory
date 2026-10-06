@@ -7,6 +7,9 @@ import { collections } from '@/data/gallery'
 import sig from '@/images/podpis.png'
 const me = '/images/about-portrait.jpg'
 const pad = (n) => String(n).padStart(2, '0')
+const heroImages = collections.flatMap((collection) =>
+  collection.shots.map(({ file, url }) => ({ src: url, alt: file }))
+)
 // every folder appears exactly once, as one "room"
 const total = collections.length
 const featured = ['noto', 'elena', 'vikaskilim'].map((sl) => collections.find((c) => c.slug === sl)).filter(Boolean)
@@ -48,13 +51,14 @@ onMounted(() => {
 })
 </script>
 <template>
+
   <main ref="root">
-    <HeroSection />
-    <section class="ap">
+    <HeroSection :images="heroImages" class="hero" />
+    <!-- <section class="ap">
       <img :src="me" alt="The photographer behind the lens" loading="lazy" decoding="async" />
       <h2 class="ap-t">Light is<br /><i>never still.</i></h2>
       <span class="label ap-l">Behind the lens</span>
-    </section>
+    </section> -->
     <section id="rooms" class="rooms">
       <header class="rooms-head"><span class="label">Step inside</span><span class="label">{{ pad(rooms.length) }}
           of {{ pad(total) }}</span></header>
@@ -62,7 +66,8 @@ onMounted(() => {
         data-cursor="Enter">
         <span class="r-num">{{ pad(r.n) }}</span>
         <span class="r-meta label">{{ r.type }} · {{ r.shots.length }} frames</span>
-        <div class="r-main" :class="'s' + r.shape" :data-s="r.shape"><img :src="r.main" alt="" loading="lazy" decoding="async" /></div>
+        <div class="r-main" :class="'s' + r.shape" :data-s="r.shape"><img :src="r.main" alt="" loading="lazy"
+            decoding="async" /></div>
         <div class="r-a"><img v-if="r.a" :src="r.a" alt="" loading="lazy" decoding="async" /></div>
         <div class="r-b"><img v-if="r.b" :src="r.b" alt="" loading="lazy" decoding="async" /></div>
         <h3 class="r-title" :style="{ fontSize: r.fs }"><span class="mask"><span class="t">{{ r.title }}</span></span>
@@ -73,7 +78,8 @@ onMounted(() => {
     </section>
     <footer id="contact" class="foot">
       <div class="f-in">
-        <div class="f-top"><span class="label">(Book a session)</span><span class="label">Concerts · Portraits</span></div>
+        <div class="f-top"><span class="label">(Book a session)</span><span class="label">Concerts · Portraits</span>
+        </div>
         <h2 class="f-t"><span class="mask"><span class="t">Let’s make</span></span><span class="mask"><span
               class="t">something still.</span></span></h2>
         <div class="f-mid">
@@ -105,6 +111,19 @@ onMounted(() => {
   </main>
 </template>
 <style>
+.ap {
+  background-image: url('src/images/fon2.png');
+  width: 100vw;
+}
+
+.ap-l {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  padding: 0.5rem 1rem;
+  font-size: clamp(0.7rem, 1.2vw, 1rem);
+}
+
 .ap img {
   width: 100%;
   height: 100%;
@@ -120,5 +139,11 @@ onMounted(() => {
 
 .f-credit a:hover {
   opacity: 0.7;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
 }
 </style>

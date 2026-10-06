@@ -1,12 +1,26 @@
 // Serve resized, compressed copies; keep the originals in place for archival quality.
-const files = import.meta.glob('/src/images/optimized/{concerts,portraits}/**/*.jpg', { eager: true, query: '?url', import: 'default' })
+const files = import.meta.glob('/src/images/optimized/{portraits, concerts}/**/*.jpg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
 const nat = (a, b) => a.file.localeCompare(b.file, undefined, { numeric: true })
 const map = {}
 for (const [p, url] of Object.entries(files)) {
   const [, , , , type, folder, file] = p.split('/')
   const key = type + '/' + folder
   const [title, sub = ''] = folder.split(' - ')
-  ;(map[key] ??= { type, folder, title: title.trim(), sub: sub.trim(), slug: folder.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), all: [] }).all.push({ file, url })
+  ;(map[key] ??= {
+    type,
+    folder,
+    title: title.trim(),
+    sub: sub.trim(),
+    slug: folder
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, ''),
+    all: [],
+  }).all.push({ file, url })
 }
 export const collections = Object.values(map).map((c) => {
   const isCover = (f) => /^[GD][A-Z]+\.\w+$/.test(f.file) // GXX = wide cover, DXX = tall cover

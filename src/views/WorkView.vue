@@ -5,7 +5,7 @@ import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { lenis, auto } from '@/lib/lenis'
 import Workwheel from '@/components/workwheel.vue'
 import { collections } from '@/data/gallery'
-import bg from '@/images/fon.jpg'
+
 const router = useRouter()
 const items = collections.map((c) => ({ title: c.title, src: c.tall, aspect: 3 / 4 }))
 const pad = (n) => String(n).padStart(2, '0')
@@ -37,8 +37,10 @@ onBeforeUnmount(() => { clearTimeout(timer); lenis.start(); ctx?.revert() })
 </script>
 <template>
     <main ref="root" class="work">
+        <FlutedGlassBackground fixed />
+
         <section class="w-wheel" data-lenis-prevent-wheel>
-            <Workwheel :items="items" :backgroundImage="bg" @activeChange="onActive" @focusChange="onFocus" />
+            <Workwheel :items="items" @activeChange="onActive" @focusChange="onFocus" />
         </section>
         <section class="w-index">
             <header class="w-head">

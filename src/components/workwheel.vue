@@ -1,11 +1,12 @@
 <template>
     <div :style="{
         position: 'relative',
+        isolation: 'isolate',          // <- new
         width: '100%',
         height: '100vh',
         minHeight: '420px',
         overflow: 'hidden',
-        background: backgroundImage ? `url(${backgroundImage}) center / cover no-repeat` : background,
+        background: background ?? '#111111',
         color: '#ffffff',
         ...style
     }" tabindex="0" role="region" aria-roledescription="carousel" :aria-labelledby="labelId" @keydown="onKeyDown">
@@ -14,7 +15,7 @@
             {{ currentItem?.title ?? "" }}, {{ pad(active + 1) }} of {{ pad(items.length) }}
             {{ focused ? ", focused" : "" }}
         </p>
-
+        <FlutedGlassBackground v-if="!failed" />
         <!-- WebGL Canvas or Fallback -->
         <div v-if="failed"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111111; color: #ffffff;">
@@ -49,6 +50,7 @@
 
 <script lang="ts">
 import type { CSSProperties } from "vue";
+import FlutedGlassBackground from "@/components/Flutedglassbackground.vue";
 
 export interface LiquidGlassCarouselItem {
     src: string;
@@ -1261,7 +1263,7 @@ function createCarousel(
         ? Promise.all([
             (renderer as any).compileAsync(scene, camera),
             (renderer as any).compileAsync(lensScene, lensCam),
-        ]).catch(() => {})
+        ]).catch(() => { })
         : Promise.resolve();
     Promise.all([texturesReady, compiled]).then(() => {
         if (!running) return;
