@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { lenis, auto } from '@/lib/lenis'
-import Workwheel from '@/components/workwheel.vue'
+
 import { collections } from '@/data/gallery'
 
 const router = useRouter()
