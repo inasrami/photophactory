@@ -1,3 +1,5 @@
+import { stories } from './stories'
+
 const files = import.meta.glob('/src/images/optimized/**/*.jpg', {
   eager: true,
   query: '?url',
@@ -22,6 +24,7 @@ const projects = [
   {
     folder: 'fightNight',
     title: 'Fight Night',
+    sub: 'NOTO',
     cover: 'Fight1.jpg',
     tall: 'Fight2.jpg',
     shots: ['Fight3.jpg', 'Fight4.jpg', 'Fight5.jpg', 'Fight6.jpg', 'Fight7.jpg', 'Fight8.jpg'],
@@ -231,11 +234,15 @@ export const collections = projects.map((p) => {
   const cover = p.cover ? photo(p.folder, p.cover) : null
   const tall = p.tall ? photo(p.folder, p.tall) : null
 
+  const story = stories[p.folder]
+
   return {
     type,
     folder: name,
-    title: (p.title || title).trim(),
-    sub: sub.trim(),
+    title: (story?.title || p.title || title).trim(),
+    titleBg: story && story.titleBg !== story.title ? story.titleBg : '',
+    text: story?.text ?? [],
+    sub: (p.sub ?? sub).trim(),
     slug: slugify(name),
     all: [cover, tall, ...shots].filter(Boolean),
     shots,

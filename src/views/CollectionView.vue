@@ -24,6 +24,7 @@ onMounted(async () => {
       gsap.from(img, { scale: 1.45, duration: 1.8, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
       gsap.fromTo(el, { y: k }, { y: -k, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true } })
     })
+    gsap.from('.story-head > *, .story-body p', { opacity: 0, y: 40, stagger: 0.15, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: '.story', start: 'top 80%' } })
     gsap.to('.c-title', { yPercent: -40, opacity: 0, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
     gsap.fromTo('.next h2', { letterSpacing: '0.25em', opacity: 0.15 }, { letterSpacing: '-0.03em', opacity: 1, ease: 'none', scrollTrigger: { trigger: '.next', start: 'top 90%', end: 'top 30%', scrub: true } })
   }, root.value)
@@ -37,8 +38,17 @@ onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
       <div class="hero-scrim" />
       <div class="c-info"><span class="label">{{ c.type }}</span><span class="label">{{ c.sub }}</span><span
           class="label">{{ c.shots.length }} frames</span></div>
-      <h1 class="c-title"><span v-for="(ch, i) in c.title.toUpperCase().split('')" :key="i" class="mask"><span
+      <h1 class="c-title" :style="{ '--n': c.title.length }"><span v-for="(ch, i) in c.title.toUpperCase().split('')" :key="i" class="mask"><span
             class="ch">{{ ch === ' ' ? '\u00A0' : ch }}</span></span></h1>
+    </section>
+    <section v-if="c.text.length" class="story">
+      <div class="story-head">
+        <span class="label">The story</span>
+        <p v-if="c.titleBg" class="story-bg" lang="bg">{{ c.titleBg }}</p>
+      </div>
+      <div class="story-body" lang="bg">
+        <p v-for="(para, i) in c.text" :key="i">{{ para }}</p>
+      </div>
     </section>
     <section class="grid">
       <figure v-for="(s, i) in c.shots" :key="s.url" class="shot" data-cursor="Open" @click="open = i"><img :src="s.url"
