@@ -116,6 +116,7 @@ const rails = computed(() =>
         </template>
       </div>
     </div>
+    <div class="ish-fade" aria-hidden="true" />
 
     <slot />
   </div>
@@ -130,6 +131,7 @@ const rails = computed(() =>
 
 .h1text {
   position: absolute;
+  z-index: 3;
   top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -142,6 +144,7 @@ const rails = computed(() =>
 
 .h2text {
   position: absolute;
+  z-index: 3;
   top: 85%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -173,6 +176,16 @@ const rails = computed(() =>
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.ish-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, #000 0%, transparent 12%, transparent 88%, #000 100%),
+    linear-gradient(to bottom, #000 0%, transparent 22%);
 }
 
 .ish-inner {

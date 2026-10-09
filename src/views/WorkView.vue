@@ -4,10 +4,19 @@ import { useRouter } from 'vue-router'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { lenis, auto } from '@/lib/lenis'
 import Workwheel from '@/components/workwheel.vue'
-import { collections } from '@/data/gallery'
+import { collections, workWheelImages } from '@/data/workWheelImages'
 
 const router = useRouter()
-const items = collections.map((c) => ({ title: c.title, src: c.tall, aspect: 3 / 4 }))
+const items = collections.flatMap((collection) => {
+    const images = workWheelImages[collection.slug] ?? []
+    if (images.length === 0) console.warn('Work wheel images not configured:', collection.slug)
+    return images.map((src) => ({
+        title: collection.title,
+        src,
+        aspect: 3 / 4,
+        collection,
+    }))
+})
 const pad = (n) => String(n).padStart(2, '0')
 const root = ref(null)
 let idx = 0, timer, ctx
@@ -15,7 +24,10 @@ let idx = 0, timer, ctx
 const onActive = (i) => { idx = i }
 const onFocus = (open) => {
     clearTimeout(timer)
-    if (open) { const c = collections[idx]; timer = setTimeout(() => router.push(`/${c.type}/${c.slug}`), 800) }
+    if (open) {
+        const collection = items[idx]?.collection
+        if (collection) timer = setTimeout(() => router.push(`/${collection.type}/${collection.slug}`), 800)
+    }
 }
 onMounted(() => {
     ctx = gsap.context(() => {
