@@ -1,9 +1,10 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { lenis, auto } from '@/lib/lenis'
 import Workwheel from '@/components/workwheel.vue'
+import FlutedGlassBackground from '@/components/Flutedglassbackground.vue'
 import { collections, workWheelImages } from '@/data/workWheelImages'
 
 const router = useRouter()
@@ -19,9 +20,36 @@ const items = collections.flatMap((collection) => {
 })
 const pad = (n) => String(n).padStart(2, '0')
 const root = ref(null)
+const preview = ref(null)
+const previewImage = ref(collections[0]?.cover ?? '')
+const previewVisible = ref(false)
 let idx = 0, timer, ctx
 // each wheel panel = one folder. Opening a panel takes you into that folder.
 const onActive = (i) => { idx = i }
+const positionAlbumPreview = (event) => {
+    if (!preview.value) return
+    const { offsetWidth: width, offsetHeight: height } = preview.value
+    let x = event.clientX + 24
+    if (x + width > innerWidth - 12) x = event.clientX - width - 24
+    const y = Math.max(12, Math.min(event.clientY + 20, innerHeight - height - 12))
+    preview.value.style.left = `${x}px`
+    preview.value.style.top = `${y}px`
+}
+const showAlbumPreview = async (event, image) => {
+    if (!matchMedia('(hover: hover)').matches) return
+    previewImage.value = image
+    await nextTick()
+    if (!preview.value) return
+    positionAlbumPreview(event)
+    previewVisible.value = true
+}
+const moveAlbumPreview = (event) => {
+    if (!previewVisible.value) return
+    positionAlbumPreview(event)
+}
+const hideAlbumPreview = () => {
+    previewVisible.value = false
+}
 const onFocus = (open) => {
     clearTimeout(timer)
     if (open) {
@@ -61,11 +89,15 @@ onBeforeUnmount(() => { clearTimeout(timer); lenis.start(); ctx?.revert() })
                 <p class="label w-meta">{{ pad(collections.length) }} stories</p>
             </header>
             <div class="w-list">
-                <RouterLink v-for="c in collections" :key="c.slug" :to="`/${c.type}/${c.slug}`" class="row w-row">
+                <RouterLink v-for="c in collections" :key="c.slug" :to="`/${c.type}/${c.slug}`" class="row w-row"
+                    @mouseenter="showAlbumPreview($event, c.cover)" @mousemove="moveAlbumPreview"
+                    @mouseleave="hideAlbumPreview">
                     <h3>{{ c.title }}</h3><span class="sub">{{ c.type }}{{ c.sub ? ' · ' + c.sub : '' }}</span><span
                         class="cnt">{{ pad(c.shots.length) }}</span>
                 </RouterLink>
             </div>
         </section>
+        <img ref="preview" :src="previewImage" class="preview"
+            :style="{ opacity: previewVisible ? 1 : 0, scale: previewVisible ? 1 : 0.9 }" alt="" aria-hidden="true" />
     </main>
 </template>

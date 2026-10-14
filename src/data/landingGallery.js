@@ -13,28 +13,28 @@ const image = (path) => {
 // Edit these paths and links to change the landing gallery photos.
 const imagePaths = [
   [
-    { path: 'concerts/NOTO/n1.jpg', alt: 'Noto', to: '/concerts/noto' },
-    { path: 'portraits/Elena/e4.jpg', alt: 'Elena', to: '/portraits/elena' },
-    { path: 'concerts/NOTO/n9.jpg', alt: 'Noto', to: '/concerts/noto' },
-    { path: 'portraits/Vikaskilim/vk2.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
-    { path: 'concerts/NOTO/n15.jpg', alt: 'Noto', to: '/concerts/noto' },
-    { path: 'portraits/Elena/e10.jpg', alt: 'Elena', to: '/portraits/elena' },
-  ],
-  [
     { path: 'portraits/Elena/e1.jpg', alt: 'Elena', to: '/portraits/elena' },
     { path: 'portraits/Vikaskilim/vk6.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
-    { path: 'concerts/NOTO/n3.jpg', alt: 'Noto', to: '/concerts/noto' },
     { path: 'portraits/Elena/e10.jpg', alt: 'Elena', to: '/portraits/elena' },
     { path: 'portraits/Vikaskilim/vk4.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
     { path: 'portraits/Elena/e7.jpg', alt: 'Elena', to: '/portraits/elena' },
+    { path: 'portraits/Vikaskilim/vk2.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
+  ],
+  [
+    { path: 'portraits/Borislava/b3.jpg', alt: 'Borislava' },
+    { path: 'portraits/cowgirl - Kalina/ka4.jpg', alt: 'Kalina' },
+    { path: 'portraits/Elenac/ec3.jpg', alt: 'Eleneac' },
+    { path: 'portraits/Godej/KD-385.jpg', alt: 'Godej' },
+    { path: 'portraits/Ivan i Zdravka/zi1.jpg', alt: 'Ivan i Zdravka' },
+    { path: 'portraits/Vika/vp4.jpg', alt: 'Vika' },
   ],
   [
     { path: 'portraits/Vikaskilim/vk1.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
-    { path: 'concerts/NOTO/n15.jpg', alt: 'Noto', to: '/concerts/noto' },
     { path: 'portraits/Elena/e7.jpg', alt: 'Elena', to: '/portraits/elena' },
     { path: 'portraits/Vikaskilim/vk4.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
     { path: 'portraits/Vikaskilim/vk1.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
     { path: 'portraits/Elena/e10.jpg', alt: 'Elena', to: '/portraits/elena' },
+    { path: 'portraits/Elena/e4.jpg', alt: 'Elena', to: '/portraits/elena' },
   ],
 ]
 

@@ -2,8 +2,8 @@
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
 defineProps({
-    // true = pinned to the viewport, false = fills the nearest positioned parent
-    fixed: { type: Boolean, default: false },
+  // true = pinned to the viewport, false = fills the nearest positioned parent
+  fixed: { type: Boolean, default: false },
 });
 
 const canvas = ref(null);
@@ -13,7 +13,7 @@ attribute vec2 a_pos;
 void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 `;
 
-// "Mesh drift" — made with the 21st.dev Shader Builder (unmodified)
+// "Mesh drift" - made with the 21st.dev Shader Builder (unmodified)
 const FRAG = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -289,11 +289,11 @@ void main() {
 
 // Recipe values, exactly as listed in the shader header.
 const COLORS = new Float32Array([
-    0.012, 0.11, 0.149,
-    0.106, 0.424, 0.659,
-    0.353, 0.824, 0.957,
-    0.918, 0.976, 1.0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // unused slots 4..7
+  0.012, 0.11, 0.149,
+  0.106, 0.424, 0.659,
+  0.353, 0.824, 0.957,
+  0.918, 0.976, 1.0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // unused slots 4..7
 ]);
 const SHAPE = [1.76, 0.86, 0.68, 0.23];
 const SURFACE = [1.98, 1.23, -0.08, 1.6];
@@ -322,183 +322,183 @@ let mouseTX = 0;
 let mouseTY = 0;
 
 function compile(type, src) {
-    const sh = gl.createShader(type);
-    gl.shaderSource(sh, src);
-    gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-        console.error("Shader compile error:", gl.getShaderInfoLog(sh));
-        gl.deleteShader(sh);
-        return null;
-    }
-    return sh;
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    console.error("Shader compile error:", gl.getShaderInfoLog(sh));
+    gl.deleteShader(sh);
+    return null;
+  }
+  return sh;
 }
 
 function resize() {
-    const el = canvas.value;
-    if (!el || !gl) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.round(el.clientWidth * dpr));
-    const h = Math.max(1, Math.round(el.clientHeight * dpr));
-    if (el.width !== w || el.height !== h) {
-        el.width = w;
-        el.height = h;
-    }
-    gl.viewport(0, 0, w, h);
+  const el = canvas.value;
+  if (!el || !gl) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round(el.clientWidth * dpr));
+  const h = Math.max(1, Math.round(el.clientHeight * dpr));
+  if (el.width !== w || el.height !== h) {
+    el.width = w;
+    el.height = h;
+  }
+  gl.viewport(0, 0, w, h);
 }
 
 function frame(now) {
-    raf = requestAnimationFrame(frame);
-    const dt = Math.min((now - last) / 1000, 0.1);
-    last = now;
-    time += dt;
+  raf = requestAnimationFrame(frame);
+  const dt = Math.min((now - last) / 1000, 0.1);
+  last = now;
+  time += dt;
 
-    // Ease cursor presence and position so the push never snaps.
-    const k = Math.min(1, dt * 8);
-    presence += (presenceTarget - presence) * k;
-    mouseX += (mouseTX - mouseX) * k;
-    mouseY += (mouseTY - mouseY) * k;
+  // Ease cursor presence and position so the push never snaps.
+  const k = Math.min(1, dt * 8);
+  presence += (presenceTarget - presence) * k;
+  mouseX += (mouseTX - mouseX) * k;
+  mouseY += (mouseTY - mouseY) * k;
 
-    const el = canvas.value;
-    gl.uniform3fv(loc.colors, COLORS);
-    gl.uniform4f(loc.scene, el.width, el.height, time * TIME_SCALE, 4.0);
-    gl.uniform4fv(loc.shape, SHAPE);
-    gl.uniform4fv(loc.surface, SURFACE);
-    gl.uniform4fv(loc.finish, FINISH);
-    gl.uniform4fv(loc.transform, TRANSFORM);
-    gl.uniform4f(loc.space, SPACE_OFFSET[0], SPACE_OFFSET[1], mouseX, mouseY);
-    gl.uniform4f(loc.cursor, presence, CURSOR_EFFECT, CURSOR_STRENGTH, CURSOR_RADIUS);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  const el = canvas.value;
+  gl.uniform3fv(loc.colors, COLORS);
+  gl.uniform4f(loc.scene, el.width, el.height, time * TIME_SCALE, 4.0);
+  gl.uniform4fv(loc.shape, SHAPE);
+  gl.uniform4fv(loc.surface, SURFACE);
+  gl.uniform4fv(loc.finish, FINISH);
+  gl.uniform4fv(loc.transform, TRANSFORM);
+  gl.uniform4f(loc.space, SPACE_OFFSET[0], SPACE_OFFSET[1], mouseX, mouseY);
+  gl.uniform4f(loc.cursor, presence, CURSOR_EFFECT, CURSOR_STRENGTH, CURSOR_RADIUS);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 function start() {
-    if (raf || !gl) return;
-    last = performance.now();
-    raf = requestAnimationFrame(frame);
+  if (raf || !gl) return;
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
 }
 
 function stop() {
-    cancelAnimationFrame(raf);
-    raf = 0;
+  cancelAnimationFrame(raf);
+  raf = 0;
 }
 
 function onVisibility() {
-    if (document.hidden) stop();
-    else start();
+  if (document.hidden) stop();
+  else start();
 }
 
 function onPointerMove(e) {
-    const el = canvas.value;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const inside =
-        e.clientX >= r.left && e.clientX <= r.right &&
-        e.clientY >= r.top && e.clientY <= r.bottom;
-    presenceTarget = inside ? 1 : 0;
-    if (!inside) return;
-    mouseTX = ((e.clientX - r.left) / r.width) * 2 - 1;
-    mouseTY = -(((e.clientY - r.top) / r.height) * 2 - 1); // GL y points up
-    // First entry: start under the cursor instead of sweeping in from the centre.
-    if (presence < 0.01) {
-        mouseX = mouseTX;
-        mouseY = mouseTY;
-    }
+  const el = canvas.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const inside =
+    e.clientX >= r.left && e.clientX <= r.right &&
+    e.clientY >= r.top && e.clientY <= r.bottom;
+  presenceTarget = inside ? 1 : 0;
+  if (!inside) return;
+  mouseTX = ((e.clientX - r.left) / r.width) * 2 - 1;
+  mouseTY = -(((e.clientY - r.top) / r.height) * 2 - 1); // GL y points up
+  // First entry: start under the cursor instead of sweeping in from the centre.
+  if (presence < 0.01) {
+    mouseX = mouseTX;
+    mouseY = mouseTY;
+  }
 }
 
 function onPointerLeave() {
-    presenceTarget = 0;
+  presenceTarget = 0;
 }
 
 function onContextLost(e) {
-    e.preventDefault();
-    stop();
+  e.preventDefault();
+  stop();
 }
 
 onMounted(() => {
-    const el = canvas.value;
-    gl = el.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" });
-    if (!gl) return; // no WebGL: the CSS fallback colour stays visible
+  const el = canvas.value;
+  gl = el.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" });
+  if (!gl) return; // no WebGL: the CSS fallback colour stays visible
 
-    const vs = compile(gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl.FRAGMENT_SHADER, FRAG);
-    if (!vs || !fs) return;
+  const vs = compile(gl.VERTEX_SHADER, VERT);
+  const fs = compile(gl.FRAGMENT_SHADER, FRAG);
+  if (!vs || !fs) return;
 
-    program = gl.createProgram();
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error("Program link error:", gl.getProgramInfoLog(program));
-        return;
-    }
-    gl.useProgram(program);
+  program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error("Program link error:", gl.getProgramInfoLog(program));
+    return;
+  }
+  gl.useProgram(program);
 
-    // Fullscreen triangle
-    buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const aPos = gl.getAttribLocation(program, "a_pos");
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+  // Fullscreen triangle
+  buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(program, "a_pos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-    loc = {
-        colors: gl.getUniformLocation(program, "u_colors"),
-        scene: gl.getUniformLocation(program, "u_scene"),
-        shape: gl.getUniformLocation(program, "u_shape"),
-        surface: gl.getUniformLocation(program, "u_surface"),
-        finish: gl.getUniformLocation(program, "u_finish"),
-        transform: gl.getUniformLocation(program, "u_transform"),
-        space: gl.getUniformLocation(program, "u_space"),
-        cursor: gl.getUniformLocation(program, "u_cursor"),
-    };
+  loc = {
+    colors: gl.getUniformLocation(program, "u_colors"),
+    scene: gl.getUniformLocation(program, "u_scene"),
+    shape: gl.getUniformLocation(program, "u_shape"),
+    surface: gl.getUniformLocation(program, "u_surface"),
+    finish: gl.getUniformLocation(program, "u_finish"),
+    transform: gl.getUniformLocation(program, "u_transform"),
+    space: gl.getUniformLocation(program, "u_space"),
+    cursor: gl.getUniformLocation(program, "u_cursor"),
+  };
 
-    resize();
-    resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(el);
+  resize();
+  resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(el);
 
-    // The canvas sits behind the page and ignores pointer events, so track the
-    // pointer on the window instead.
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    document.documentElement.addEventListener("pointerleave", onPointerLeave);
-    document.addEventListener("visibilitychange", onVisibility);
-    el.addEventListener("webglcontextlost", onContextLost);
+  // The canvas sits behind the page and ignores pointer events, so track the
+  // pointer on the window instead.
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
+  document.documentElement.addEventListener("pointerleave", onPointerLeave);
+  document.addEventListener("visibilitychange", onVisibility);
+  el.addEventListener("webglcontextlost", onContextLost);
 
-    if (!document.hidden) start();
+  if (!document.hidden) start();
 });
 
 onBeforeUnmount(() => {
-    stop();
-    resizeObserver?.disconnect();
-    window.removeEventListener("pointermove", onPointerMove);
-    document.documentElement.removeEventListener("pointerleave", onPointerLeave);
-    document.removeEventListener("visibilitychange", onVisibility);
-    canvas.value?.removeEventListener("webglcontextlost", onContextLost);
-    if (gl) {
-        if (buffer) gl.deleteBuffer(buffer);
-        if (program) gl.deleteProgram(program);
-        gl.getExtension("WEBGL_lose_context")?.loseContext();
-    }
-    gl = program = buffer = null;
+  stop();
+  resizeObserver?.disconnect();
+  window.removeEventListener("pointermove", onPointerMove);
+  document.documentElement.removeEventListener("pointerleave", onPointerLeave);
+  document.removeEventListener("visibilitychange", onVisibility);
+  canvas.value?.removeEventListener("webglcontextlost", onContextLost);
+  if (gl) {
+    if (buffer) gl.deleteBuffer(buffer);
+    if (program) gl.deleteProgram(program);
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+  }
+  gl = program = buffer = null;
 });
 </script>
 
 <template>
-    <canvas ref="canvas" :class="['shader-bg', { 'shader-bg--fixed': fixed }]" aria-hidden="true" />
+  <canvas ref="canvas" :class="['shader-bg', { 'shader-bg--fixed': fixed }]" aria-hidden="true" />
 </template>
 
 <style scoped>
 .shader-bg {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: #031c26;
-    /* shown until WebGL kicks in, or if it's unavailable */
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: #031c26;
+  /* shown until WebGL kicks in, or if it's unavailable */
 }
 
 .shader-bg--fixed {
-    position: fixed;
+  position: fixed;
 }
 </style>

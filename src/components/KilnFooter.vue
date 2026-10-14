@@ -303,7 +303,7 @@ const backToTop = () => lenis.scrollTo(0, a.reduced ? { immediate: true } : { du
         <p class="kwf-reg">{{ registry }}</p>
         <p class="kwf-legal">
           <template v-for="(link, i) in legal" :key="link.label">
-            <span v-if="i > 0" aria-hidden="true">—</span>
+            <span v-if="i > 0" aria-hidden="true">-</span>
             <RouterLink v-if="link.to" :to="link.to" class="kwf-link">{{ link.label }}</RouterLink>
             <a v-else class="kwf-link" :href="link.href" :target="link.external ? '_blank' : null"
               :rel="link.external ? 'noopener' : null">{{ link.label }}</a>

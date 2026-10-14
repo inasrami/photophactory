@@ -470,7 +470,10 @@ function createCarousel(
 
     let W = Math.max(1, mount.clientWidth);
     let H = Math.max(1, mount.clientHeight);
-    const panelHFor = () => Math.max(120, Math.min(options.panelHeight, Math.round(H * 0.52)));
+    const panelHFor = () => {
+        const mobileWidthLimit = (W * 0.68) / PORTRAIT_ASPECT;
+        return Math.max(120, Math.min(options.panelHeight, Math.round(H * 0.52), mobileWidthLimit));
+    };
     let PANEL_H = panelHFor();
     const GAP = options.gap;
     const EASE = reduced ? 0.28 : 0.09;
@@ -1249,7 +1252,12 @@ function createCarousel(
         renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
+        renderer.clearDepth();
+        const autoClear = renderer.autoClear;
+        renderer.autoClear = false;
         renderer.render(lensScene, lensCam);
+        renderer.autoClear = autoClear;
         raf = requestAnimationFrame(tick);
     }
 

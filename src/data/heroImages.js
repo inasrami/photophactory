@@ -13,11 +13,12 @@ const image = (path) => {
 // Edit these paths to choose the photos shown in the hero.
 const imagePaths = [
   'fightNight/Fight3.jpg',
+  'concerts/Ivo Dimchev - Plovdiv, Antichen teatar/DID.jpg',
   'fightNight/Fight4.jpg',
-  'fightNight/Fight5.jpg',
-  'fightNight/Fight6.jpg',
-  'fightNight/Fight7.jpg',
-  'fightNight/Fight8.jpg',
+  'concerts/Ivo Dimchev - Plovdiv, Antichen teatar/GID.jpg',
+  'concerts/Kerana & Kosmonavtite/DK.jpg',
+  'concerts/Torino & Pashata/tp1.jpg',
+  'concerts/NOTO/n6.jpg',
 ]
 
 export const heroImages = imagePaths.map(image)

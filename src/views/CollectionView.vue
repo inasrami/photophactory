@@ -8,6 +8,30 @@ const c = find(route.params.type, route.params.slug)
 const next = collections[(collections.indexOf(c) + 1) % collections.length]
 const open = ref(-1), root = ref(null)
 const cur = computed(() => c.shots[open.value])
+const galleryItems = computed(() => {
+  const sentences = c.text.flatMap((paragraph) =>
+    (paragraph.match(/[^.!?]+(?:[.!?]+[”’"»]*|$)/gu) || [])
+      .map((sentence) => sentence.trim())
+      .filter(Boolean),
+  )
+  const sentenceSlots = new Map()
+  const photoCount = c.shots.length
+
+  sentences.forEach((text, index) => {
+    const slot = Math.min(
+      photoCount - 1,
+      Math.max(1, Math.round(((index + 1) * photoCount) / (sentences.length + 1))),
+    )
+    const slotSentences = sentenceSlots.get(slot) || []
+    slotSentences.push({ type: 'text', text, key: `text-${index}`, index })
+    sentenceSlots.set(slot, slotSentences)
+  })
+
+  return c.shots.flatMap((shot, index) => [
+    { type: 'shot', shot, index, key: shot.url },
+    ...(sentenceSlots.get(index + 1) || []),
+  ])
+})
 const go = (d) => (open.value = (open.value + d + c.shots.length) % c.shots.length)
 const key = (e) => open.value > -1 && (e.key === 'Escape' ? (open.value = -1) : e.key === 'ArrowRight' ? go(1) : e.key === 'ArrowLeft' && go(-1))
 let ctx
@@ -24,7 +48,16 @@ onMounted(async () => {
       gsap.from(img, { scale: 1.45, duration: 1.8, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
       gsap.fromTo(el, { y: k }, { y: -k, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true } })
     })
-    gsap.from('.story-head > *, .story-body p', { opacity: 0, y: 40, stagger: 0.15, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: '.story', start: 'top 80%' } })
+    gsap.from('.story-head > *', { opacity: 0, y: 40, stagger: 0.15, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: '.story', start: 'top 80%' } })
+    gsap.utils.toArray('.story-sentence').forEach((sentence) => {
+      gsap.from(sentence, {
+        opacity: 0,
+        y: 28,
+        duration: 1,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: sentence, start: 'top 88%' },
+      })
+    })
     gsap.to('.c-title', { yPercent: -40, opacity: 0, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
     gsap.fromTo('.next h2', { letterSpacing: '0.25em', opacity: 0.15 }, { letterSpacing: '-0.03em', opacity: 1, ease: 'none', scrollTrigger: { trigger: '.next', start: 'top 90%', end: 'top 30%', scrub: true } })
   }, root.value)
@@ -46,13 +79,16 @@ onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
         <span class="label">The story</span>
         <p v-if="c.titleBg" class="story-bg" lang="bg">{{ c.titleBg }}</p>
       </div>
-      <div class="story-body" lang="bg">
-        <p v-for="(para, i) in c.text" :key="i">{{ para }}</p>
-      </div>
     </section>
-    <section class="grid">
-      <figure v-for="(s, i) in c.shots" :key="s.url" class="shot" data-cursor="Open" @click="open = i"><img :src="s.url"
-          :alt="`${c.title} ${i + 1}`" loading="lazy" decoding="async" @load="ScrollTrigger.refresh()" /></figure>
+    <section class="grid" :lang="c.text.length ? 'bg' : undefined">
+      <template v-for="item in galleryItems" :key="item.key">
+        <figure v-if="item.type === 'shot'" class="shot" :class="`shot-${(item.index % 6) + 1}`" data-cursor="Open"
+          @click="open = item.index"><img :src="item.shot.url" :alt="`${c.title} ${item.index + 1}`" loading="lazy"
+            decoding="async" @load="ScrollTrigger.refresh()" /></figure>
+        <blockquote v-else class="story-sentence" :class="`story-sentence-${item.index % 3}`">
+          <p>{{ item.text }}</p>
+        </blockquote>
+      </template>
     </section>
     <RouterLink :to="`/${next.type}/${next.slug}`" class="next"><span class="label">Next story</span>
       <h2>{{ next.title }}</h2>
