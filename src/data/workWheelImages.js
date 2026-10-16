@@ -14,22 +14,13 @@ const image = (path) => {
 
 // Edit these paths to choose the photos shown for each Work page project.
 const imagePaths = {
-  fightnight: ['fightNight/Fight1.jpg', 'fightNight/Fight2.jpg'],
-  borislava: ['portraits/Borislava/GB.jpg'],
-  elena: ['portraits/Elena/DE.jpg'],
-  elenac: ['portraits/Elenac/GEC.jpg'],
-  godej: ['portraits/Godej/GIF.jpg'],
-  'ivan-i-zdravka': ['portraits/Ivan i Zdravka/GZI.jpg'],
-  'cowgirl-kalina': ['portraits/cowgirl - Kalina/DK.jpg'],
-  valeto: ['portraits/Valeto/DV.jpg'],
-  vika: ['portraits/Vika/GVP.jpg'],
-  vikaskilim: ['portraits/Vikaskilim/DVK.jpg'],
-  'ivo-dimchev-plovdiv-antichen-teatar': [
-    'concerts/Ivo Dimchev - Plovdiv, Antichen teatar/GID.jpg',
-  ],
-  'kerana-kosmonavtite': ['concerts/Kerana & Kosmonavtite/GK.jpg'],
-  noto: ['concerts/NOTO/n1.jpg'],
-  'torino-pashata': ['concerts/Torino & Pashata/GTP.jpg'],
+  'cowgirl-kalina': ['portraits/cowgirl - Kalina/GK.jpg'],
+  borislava: ['portraits/Borislava/b3.jpg', 'portraits/Borislava/b2.jpg'],
+  elena: ['portraits/Elena/e1.jpg', 'portraits/Elena/e2.jpg'],
+  elenac: ['portraits/Elenac/ec3.jpg', 'portraits/Elenac/ec4.jpg'],
+  valeto: ['portraits/Valeto/v2.jpg', 'portraits/Valeto/v3.jpg'],
+  vika: ['portraits/Vika/vp2.jpg', 'portraits/Vika/vp6.jpg'],
+  vikaskilim: ['portraits/Vikaskilim/vk1.jpg', 'portraits/Vikaskilim/vk3.jpg'],
 }
 
 export const workWheelImages = Object.fromEntries(

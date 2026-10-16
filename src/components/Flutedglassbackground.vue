@@ -288,15 +288,15 @@ void main() {
 
 // Recipe values, exactly as listed in the shader header.
 const COLORS = new Float32Array([
-  0.027, 0.102, 0.141,
-  0.082, 0.369, 0.459,
-  0.404, 0.91, 0.976,
-  0.941, 0.992, 0.98,
+  0.05, 0.03, 0.02,
+  0.18, 0.10, 0.06,
+  0.41, 0.23, 0.12,
+  0.75, 0.63, 0.42,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // unused slots 4..7
 ]);
 const SHAPE = [1.96, 1.0, 0.76, 0.0];
 const SURFACE = [0.8, 0.6, -0.04, 0.7];
-const FINISH = [2.55, 0.09, 0.004, 0.04];
+const FINISH = [0.0, 0.09, 0.004, 0.04];
 const TRANSFORM = [1.0, 3.14, 0.14, 1.0];
 const SPACE_OFFSET = [-0.22, -0.24];
 const CURSOR_EFFECT = 4.0; // spotlight
