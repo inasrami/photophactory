@@ -101,8 +101,9 @@ const rails = computed(() =>
 <template>
   <div class="ish-root">
     <ShaderBackground />
-    <p class="h1text" aria-hidden="true">PHOTOPHACTORY</p>
-    <img src="/public/images/logoLoader.png" class="logo" alt="Photophactory Logo" />
+    <!-- <p class="h1text" aria-hidden="true">PHOTOPHACTORY</p> -->
+    <p class="h2text" aria-hidden="true">Defined by light. Shaped by shadow. Driven by vision.</p>
+    <img src="/images/logoLoader.png" class="logo" alt="Photophactory Logo" />
     <component :is="'style'">{{ css }}</component>
 
     <div class="ish-layer" aria-hidden="true" :style="perspectiveStyle">
@@ -112,10 +113,10 @@ const rails = computed(() =>
             <img v-if="item.img" class="ish-img" :src="item.img.src" :alt="item.img.alt ?? ''" loading="lazy"
               decoding="async" draggable="false" />
           </div>
-          <p class="h2text" aria-hidden="true">Defined by light. Shaped by shadow. Driven by vision.</p>
         </template>
       </div>
     </div>
+    <!-- <p class="h2text" aria-hidden="true">Defined by light. Shaped by shadow. Driven by vision.</p> -->
     <div class="ish-fade" aria-hidden="true" />
 
     <slot />
@@ -126,7 +127,7 @@ const rails = computed(() =>
 /* :where() keeps specificity at zero so a parent's class can override height */
 :where(.ish-root) {
   min-height: 100vh;
-  background-color: aquamarine;
+  background-color: #031c26;
 }
 
 .h1text {
@@ -135,24 +136,34 @@ const rails = computed(() =>
   top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(1.5rem, 5vw, 3rem);
-  font-weight: bold;
-  color: #bfbfbf;
-  text-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.5);
-  font-family: 'Tektur';
+  font-family: var(--font-hero);
+  font-size: clamp(2rem, 5.8vw, 4.5rem);
+  font-weight: 800;
+  /* Bold H1 */
+  letter-spacing: 0.14em;
+  color: #efe9df;
+  text-shadow: 0 0.5rem 2.5rem rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
 }
 
 .h2text {
   position: absolute;
   z-index: 3;
-  top: 85%;
+  top: 25%;
   left: 50%;
+  width: min(90vw, 48rem);
+  text-align: center;
   transform: translate(-50%, -50%);
-  font-size: clamp(1rem, 1.5vw, 2rem);
-  font-weight: normal;
-  color: #bfbfbf;
-  text-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.5);
-  font-family: 'Tektur';
+  font-family: var(--sans);
+  font-size: clamp(0.8rem, 1.15vw, 1.15rem);
+  font-weight: 300;
+  /* Thin H2 */
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(239, 233, 223, 0.78);
+  text-shadow:
+    2px 3px 5px rgba(0, 0, 0, 0.95),
+    0 4px 8px rgba(0, 0, 0, 0.9);
 }
 
 .logo {

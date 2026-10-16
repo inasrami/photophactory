@@ -1326,15 +1326,19 @@ function createCarousel(
         if (focusState.anim) focusState.anim.kill();
         if (entryAnim) entryAnim.kill();
         if (cursorElement) gsap.killTweensOf(cursorElement);
-        renderer.dispose();
-        rt.dispose();
-        lensQuad.geometry.dispose();
-        lensMat.dispose();
-        pool.forEach((p) => { p.mat.dispose(); });
-        planeGeo.dispose();
-        placeholder.dispose();
-        sources.forEach((s) => { s.tex?.dispose(); });
-        if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+
+        // Defer heavy GPU resource release to avoid stuttering the route transition
+        setTimeout(() => {
+            renderer.dispose();
+            rt.dispose();
+            lensQuad.geometry.dispose();
+            lensMat.dispose();
+            pool.forEach((p) => { p.mat.dispose(); });
+            planeGeo.dispose();
+            placeholder.dispose();
+            sources.forEach((s) => { s.tex?.dispose(); });
+            if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }, 50);
     }
 
     return { closeFocus, next: () => step(1), previous: () => step(-1), destroy };

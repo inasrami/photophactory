@@ -22,14 +22,13 @@ export const footer = {
       { label: 'Home', to: '/' },
       { label: 'All work', to: '/work' },
       { label: 'About', to: '/about' },
-    ],
-    [
       { label: 'Selected', to: '/#rooms' },
-      { label: 'Contact', href: 'mailto:hello@photophactory.com' },
     ],
   ],
   followTitle: 'Elsewhere',
-  socials: [[{ label: 'Instagram ↗', href: 'https://instagram.com/', external: true }]],
+  socials: [
+    [{ label: 'Instagram ↗', href: 'https://instagram.com/photophactory.one', external: true }],
+  ],
   registry: 'Concert & portrait photography',
   legal: [{ label: 'Made by INRAIT ↗', href: 'https://inrait.com', external: true }],
   colors: { surface: '#8a5a3c', deep: '#2a1810', ink: '#f1e4d3', paper: '#2a1810' },

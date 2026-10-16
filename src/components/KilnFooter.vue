@@ -391,7 +391,8 @@ const backToTop = () => lenis.scrollTo(0, a.reduced ? { immediate: true } : { du
   font-size: clamp(20px, 3.15cqw, 52px);
   line-height: .94;
   font-weight: 500;
-  letter-spacing: -.012em
+  letter-spacing: -.012em;
+
 }
 
 .kwf-motto span {
@@ -409,7 +410,8 @@ const backToTop = () => lenis.scrollTo(0, a.reduced ? { immediate: true } : { du
   overflow: hidden;
   display: grid;
   place-items: center;
-  transition: transform .35s cubic-bezier(.2, .8, .2, 1), border-radius .35s
+  transition: transform .35s cubic-bezier(.2, .8, .2, 1), border-radius .35s;
+
 }
 
 .kwf-key:hover {

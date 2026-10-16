@@ -16,6 +16,10 @@ export const about = {
   contact: {
     label: 'Контакти',
     email: 'hello@photophactory.com',
-    links: [{ label: 'Instagram', href: 'https://instagram.com/' }],
+    phone: '+359884877149',
+    links: [
+      { label: '@photophactory.one', href: 'https://instagram.com/photophactory.one' },
+      { label: '@krasimirdjalev', href: 'https://instagram.com/krasimirdjalev' },
+    ],
   },
 }

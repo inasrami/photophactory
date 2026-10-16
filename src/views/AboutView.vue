@@ -10,7 +10,18 @@ import me2 from '@/images/optimized/Me/me2.jpg?url'
 import me3 from '@/images/Me/me3.png?url'
 
 const root = ref(null)
-const words = (t) => t.split(' ')
+
+// Paragraphs after the lead are split between the two photographs.
+const body = about.paragraphs.slice(1)
+const half = Math.ceil(body.length / 2)
+const firstSpread = body.slice(0, half)
+const secondSpread = body.slice(half)
+
+// Lens-barrel engraving: the label repeated around the ring (SVG textLength spreads it to fit exactly).
+// Repeat count is derived from the label length so letters stay readable instead of being stretched.
+const ringUnit = about.label.toUpperCase() + '   •   '
+const ringText = ringUnit.repeat(Math.max(1, Math.round(1458 / (ringUnit.length * 15))))
+
 let ctx
 let mm
 let ro
@@ -23,46 +34,60 @@ onMounted(async () => {
     refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 150)
   })
   ro.observe(root.value)
+
   ctx = gsap.context(() => {
     gsap.from('.ab-intro .label', { opacity: 0, y: 20, duration: 1, ease: 'expo.out', delay: 0.9 })
     gsap.from('.ab-portrait', { opacity: 0, y: 80, duration: 1.6, ease: 'expo.out', scrollTrigger: { trigger: '.ab-portrait', start: 'top 92%' } })
-    gsap.from('.ab-contact > *', { opacity: 0, y: 40, stagger: 0.12, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.ab-contact', start: 'top 85%' } })
     gsap.fromTo('.signature', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 2.4, delay: 0.5, ease: 'power2.inOut', scrollTrigger: { trigger: '.signature', start: 'top 80%' } })
   }, root.value)
 
-  // "За мен" story + closing quote. Skipped entirely for reduced motion (CSS default = fully visible).
+  // Everything below is scroll-scrubbed and skipped for reduced motion (CSS default = finished, fully visible page).
+  // matchMedia only runs its callback when at least one listed condition matches, so BOTH cases are listed.
   mm = gsap.matchMedia(root.value)
   mm.add(
-    { calm: '(prefers-reduced-motion: reduce)' },
+    { motion: '(prefers-reduced-motion: no-preference)', calm: '(prefers-reduced-motion: reduce)' },
     (c) => {
-      if (c.conditions.calm) return
+      if (!c.conditions.motion) return
 
-      // heading: letters rise out of their masks
-      gsap.from('.ab-title .ch', { yPercent: 115, rotate: 4, duration: 1.4, stagger: 0.06, ease: 'expo.out', scrollTrigger: { trigger: '.ab-title', start: 'top 85%' } })
-      gsap.from('.ab-story-head .label', { opacity: 0, x: -16, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.ab-story-head .label', start: 'top 90%' } })
+      // 1. The lens: the photo opens like an iris and settles, while the engraved ring spins one way
+      //    and the focus ticks spin the other. All of it is driven by scroll position.
+      // The lens is held in place by moving it down at exactly the speed of the page (no CSS sticky and
+      // no JS pin), so it works whatever overflow or transforms the surrounding layout has.
+      const holdEl = root.value.querySelector('.ab-lens-hold')
+      const lensEl = root.value.querySelector('.ab-lens')
+      holdEl.classList.add('is-held')
+      const lensTop = () => Math.max(16, (window.innerHeight - lensEl.offsetWidth) / 2)
+      const holdRange = { trigger: holdEl, start: () => `top ${lensTop()}px`, end: () => `bottom ${lensTop() + lensEl.offsetWidth}px`, invalidateOnRefresh: true }
 
-      // Story copy and photographs reveal independently as they enter the viewport.
-      gsap.from('.ab-lead', { opacity: 0, y: 40, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: '.ab-lead', start: 'top 85%' } })
-      gsap.from('.ab-story-photo', {
-        opacity: 0,
-        y: 36,
-        duration: 1.2,
-        stagger: 0.16,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: '.ab-story-flow', start: 'top 78%' },
+      // Entry: the iris opens as the lens travels up to the centre of the screen.
+      gsap
+        .timeline({ scrollTrigger: { trigger: '.ab-lens-hold', start: 'top 90%', end: () => `top ${lensTop()}px`, scrub: 0.8, invalidateOnRefresh: true } })
+        .fromTo('.ab-lens-photo', { clipPath: 'circle(3% at 50% 50%)' }, { clipPath: 'circle(50% at 50% 50%)', ease: 'power2.out' }, 0)
+        .fromTo('.ab-lens-photo img', { scale: 1.8, rotate: -16 }, { scale: 1, rotate: 0, ease: 'power2.out' }, 0)
+        .fromTo('.ab-ring', { rotate: -60, scale: 0.6 }, { rotate: 0, scale: 1, ease: 'none' }, 0)
+
+      // Hold: the lens stays centred while the ring makes one full turn, so every word passes
+      // through reading position before the page moves on.
+      gsap.to(lensEl, { y: () => holdEl.offsetHeight - lensEl.offsetWidth, ease: 'none', scrollTrigger: { ...holdRange, scrub: true } })
+      gsap
+        .timeline({ defaults: { ease: 'none' }, scrollTrigger: { ...holdRange, scrub: 0.6 } })
+        .fromTo('.ab-ring', { rotate: 0 }, { rotate: 180, immediateRender: false }, 0)
+        .fromTo('.ab-ticks', { rotate: 0 }, { rotate: -180, immediateRender: false }, 0)
+        .fromTo('.ab-lens-photo img', { scale: 1 }, { scale: 1.08, immediateRender: false }, 0)
+
+      // 2. The arch: the second portrait swings in tilted and small, then rights itself and grows
+      //    past its natural size as it leaves; the photo inside counter-rotates.
+      gsap
+        .timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: '.ab-arch', start: 'top 95%', end: 'bottom 5%', scrub: 0.8 } })
+        .fromTo('.ab-arch-shape', { rotate: -10, scale: 0.7 }, { rotate: 4, scale: 1.06 }, 0)
+        .fromTo('.ab-arch-shape img', { rotate: 10, scale: 1.4 }, { rotate: -4, scale: 1.14 }, 0)
+
+      // 3. The quote: lines drift sideways in opposite directions as they cross the screen.
+      root.value.querySelectorAll('.ab-quote p').forEach((p, i) => {
+        gsap.fromTo(p, { xPercent: i % 2 ? 6 : -6 }, { xPercent: i % 2 ? -6 : 6, ease: 'none', scrollTrigger: { trigger: p, start: 'top bottom', end: 'bottom top', scrub: true } })
       })
-      root.value.querySelectorAll('.ab-p').forEach((paragraph) => {
-        gsap.from(paragraph, {
-          opacity: 0,
-          y: 24,
-          duration: 1,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: paragraph, start: 'top 88%' },
-        })
-      })
 
-      // closing quote: words slide up out of masks, second sentence in gold
-      gsap.from('.ab-quote .qw', { yPercent: 115, duration: 1.3, stagger: 0.07, ease: 'expo.out', scrollTrigger: { trigger: '.ab-quote', start: 'top 70%' } })
+      return () => holdEl.classList.remove('is-held')
     },
   )
 })
@@ -76,154 +101,176 @@ onBeforeUnmount(() => {
 <template>
   <main ref="root" class="about">
     <section class="ab-intro" lang="bg">
+      <div class="ab-portrait-wrap">
+        <figure class="ab-portrait">
+          <MosaicPortrait :src="me3" alt="Portrait of the photographer" :cell-size="8" />
+        </figure>
+        <img :src="sig" class="signature ab-portrait-signature" alt="Photophactory signature" />
+      </div>
       <div class="ab-intro-copy">
-        <span class="label">About</span>
         <TyperText :text="about.intro" :delay="1" class="ab-typer" accent="#c9a86a" />
       </div>
-      <figure class="ab-portrait">
-        <MosaicPortrait :src="me3" alt="Portrait of the photographer" :cell-size="5" />
-      </figure>
     </section>
-    <section class="ab-story" lang="bg">
+
+    <article class="ab-story" lang="bg">
       <header class="ab-story-head">
-        <span class="label">{{ about.label }}</span>
-        <!-- <h1 class="ab-title" :aria-label="about.heading"><span v-for="(ch, i) in about.heading.toUpperCase().split('')"
-            :key="i" class="mask" aria-hidden="true"><span class="ch">{{ ch === ' ' ? '\u00A0' : ch }}</span></span>
-        </h1> -->
+        <h2 class="ab-section-title">{{ about.label }}</h2>
         <p class="ab-lead">{{ about.paragraphs[0] }}</p>
       </header>
-      <div class="ab-story-flow">
-        <figure class="ab-story-photo ab-story-photo-main">
-          <img :src="me1" alt="Портрет в сянка" fetchpriority="high" decoding="async" @load="ScrollTrigger.refresh()" />
-          <figcaption><span>01</span>{{ about.diptych[0] }}</figcaption>
-        </figure>
-        <div class="ab-copy ab-copy-first">
-          <p class="ab-p">{{ about.paragraphs[1] }}</p>
+
+      <div class="ab-lens-wrap">
+        <div class="ab-lens-hold">
+          <figure class="ab-lens">
+            <svg class="ab-ticks" viewBox="0 0 520 520" aria-hidden="true">
+              <circle cx="260" cy="260" r="254" fill="none" stroke="currentColor" stroke-width="1"
+                stroke-dasharray="1 11" />
+            </svg>
+            <svg class="ab-ring" viewBox="0 0 520 520" aria-hidden="true">
+              <defs>
+                <path id="ab-ring-path" d="M260,260 m-232,0 a232,232 0 1,1 464,0 a232,232 0 1,1 -464,0" />
+              </defs>
+              <text>
+                <textPath href="#ab-ring-path" :textLength="1458" lengthAdjust="spacing">{{ ringText }}</textPath>
+              </text>
+            </svg>
+            <div class="ab-lens-photo">
+              <img :src="me1" alt="Портрет в сянка" fetchpriority="high" decoding="async"
+                @load="ScrollTrigger.refresh()" />
+            </div>
+            <figcaption>{{ about.diptych[0] }}</figcaption>
+          </figure>
         </div>
-        <figure class="ab-story-photo ab-story-photo-secondary">
-          <img :src="me2" alt="Портрет в топла светлина" decoding="async" @load="ScrollTrigger.refresh()" />
-          <figcaption><span>02</span>{{ about.diptych[1] }}</figcaption>
-        </figure>
-        <div class="ab-copy ab-copy-rest">
-          <p v-for="(para, i) in about.paragraphs.slice(2)" :key="i" class="ab-p">{{ para }}</p>
+        <div class="ab-text ab-text-a">
+          <p v-for="(para, i) in firstSpread" :key="i">{{ para }}</p>
         </div>
       </div>
-    </section>
-    <section class="ab-closing">
-      <section class="ab-quote" lang="bg">
-        <p v-for="(line, i) in about.quote" :key="i" :class="{ 'is-accent': i === about.quote.length - 1 }">
-          <template v-for="(w, j) in words(line)" :key="j">
-            <span class="mask"><span class="qw">{{ w }}</span></span>
-            <span v-if="j < words(line).length - 1">&nbsp;</span>
-          </template>
+
+      <div class="ab-arch">
+        <figure class="ab-arch-fig">
+          <div class="ab-arch-shape">
+            <img :src="me2" alt="Портрет в топла светлина" decoding="async" @load="ScrollTrigger.refresh()" />
+          </div>
+          <figcaption>{{ about.diptych[1] }}</figcaption>
+        </figure>
+        <div class="ab-text ab-text-b">
+          <p v-for="(para, i) in secondSpread" :key="i">{{ para }}</p>
+        </div>
+      </div>
+
+      <blockquote class="ab-quote">
+        <p v-for="(line, i) in about.quote" :key="i" :class="{ 'is-accent': i === about.quote.length - 1 }">{{ line }}
         </p>
-      </section>
-      <section class="ab-second">
-        <span class="label">Photophactory</span>
-        <img :src="sig" class="signature" alt="Photophactory signature" />
-      </section>
-    </section>
-    <section class="ab-contact" lang="bg">
-      <span class="label">{{ about.contact.label }}</span>
-      <div class="ab-contact-details">
-        <a :href="`mailto:${about.contact.email}`" class="f-mail">{{ about.contact.email }}</a>
-        <div class="ab-links">
-          <a v-for="l in about.contact.links" :key="l.href" :href="l.href" target="_blank" rel="noopener">{{ l.label }}
-            ↗</a>
+      </blockquote>
+    </article>
+
+    <footer class="ab-foot" lang="bg">
+      <div class="ab-contact">
+        <h2 class="ab-contact-title">{{ about.contact.label }}</h2>
+        <div class="ab-contact-body">
+          <a :href="`mailto:${about.contact.email}`" class="ab-mail">
+            <svg class="ab-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m4 7 8 6 8-6" />
+            </svg>
+            <span>{{ about.contact.email }}</span>
+          </a>
+          <a :href="`tel:${about.contact.phone}`" class="ab-phone">
+            <svg class="ab-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              aria-hidden="true">
+              <path
+                d="M7 3h3l1.5 4-2 1.5a15 15 0 0 0 6 6l1.5-2 4 1.5v3c0 1.1-.9 2-2 2C10.2 19 5 13.8 5 7c0-2.2.9-4 2-4Z" />
+            </svg>
+            <span>{{ about.contact.phone }}</span>
+          </a>
+          <div class="ab-links">
+            <a v-for="l in about.contact.links" :key="l.href" :href="l.href" target="_blank" rel="noopener">
+              <svg class="ab-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
+              </svg>
+              {{ l.label }}
+            </a>
+          </div>
         </div>
       </div>
-    </section>
-    <RouterLink to="/work" class="ab-cta"><span class="label">See the stories</span>
-      <h2>All work →</h2>
-    </RouterLink>
+      <RouterLink to="/work" class="ab-cta">
+        <span>Вижте всички работи</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"
+          aria-hidden="true">
+          <path d="M3 12h17M14 6l6 6-6 6" />
+        </svg>
+      </RouterLink>
+    </footer>
   </main>
 </template>
 
 <style>
-/* Split intro inspired by the reference layout, using the existing animated portrait */
-.about .ab-intro {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  align-items: center;
-  gap: 4vw;
-  padding: 21vh 8vw 13vh;
+.about {
+  --accent: #c9a86a;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.ab-intro-copy {
+/* ---------- Intro (unchanged) ---------- */
+.about .ab-intro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.about .ab-intro-copy {
+  position: relative;
+  width: 100%;
+  padding: clamp(3rem, 7vw, 7rem) 8vw;
   min-width: 0;
+  text-align: center;
 }
 
 .about .ab-typer {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  margin: 2.5rem 0 0;
-  width: min(100%, 20em);
+  align-items: center;
+  margin: 0 auto;
+  width: min(100%, 24em);
   font-family: var(--serif);
   font-weight: 300;
   font-size: clamp(2rem, 5.2vw, 5.4rem);
   line-height: 1.14;
   letter-spacing: -0.02em;
-  text-align: left;
+  text-align: center;
 }
 
-/* Keep the animated words aligned with the copy column */
 .about .ab-typer [data-typer] {
-  justify-content: flex-start;
-  text-align: left;
+  justify-content: center;
+  text-align: center;
 }
 
-/* Notched feature image, rendered from the same photo as the mosaic effect */
 .ab-portrait {
-  position: relative;
-  width: 100%;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   margin: 0;
   overflow: hidden;
   clip-path: polygon(9% 0, 83% 0, 86% 10%, 100% 10%, 100% 72%, 82% 72%, 78% 76%, 78% 91%, 74% 100%, 8% 100%, 8% 56%, 5% 52%, 0 51%, 0 21%, 5% 18%);
 }
 
+.ab-portrait-wrap {
+  position: relative;
+  width: min(100vw, 177.68svh);
+  aspect-ratio: 1672 / 941;
+}
+
 .ab-portrait .mosaic {
+  width: 100%;
+  height: 100%;
   min-height: 0;
-}
-
-/* Closing note and signature share one compact, editorial row */
-.ab-closing {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(14rem, 0.7fr);
-  align-items: end;
-  gap: 4vw;
-  margin: 0 8vw;
-  padding: 10vh 0 8vh;
-  border-top: 1px solid #ffffff22;
-}
-
-.ab-closing .ab-quote {
-  padding: 0;
-  text-align: left;
-}
-
-.ab-closing .ab-quote p {
-  max-width: 16ch;
-  margin-left: 0;
-  margin-right: 0;
-  font-size: clamp(2.6rem, 5.8vw, 6.4rem);
-  line-height: 1.02;
-}
-
-.ab-closing .ab-quote p+p {
-  margin-top: 0.14em;
-}
-
-.about .ab-second {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 1.8rem;
-  min-height: 10rem;
-  padding: 0 0 0 2.4vw;
-  border-left: 1px solid #ffffff22;
 }
 
 .signature {
@@ -235,310 +282,403 @@ onBeforeUnmount(() => {
   opacity: 0.9;
 }
 
-/* Contact is presented as one clear, aligned invitation */
-.ab-contact {
-  display: grid;
-  grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr);
-  align-items: start;
-  gap: 2rem;
-  padding: 6vh 8vw 8vh;
-  border-top: 1px solid #ffffff22;
+.ab-portrait-signature {
+  position: absolute;
+  right: 4%;
+  bottom: 3%;
+  z-index: 1;
+  width: clamp(9rem, 17vw, 16rem);
+  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
 }
 
-.ab-contact-details {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.8rem;
-}
-
-.ab-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-}
-
-.ab-links a {
-  font: 400 0.78rem var(--sans);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.8;
-  transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.ab-links a:hover {
-  opacity: 1;
-  transform: translateX(8px);
-}
-
-.ab-cta {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 2rem;
-  padding: 7vh 8vw 9vh;
-  text-align: left;
-  border-top: 1px solid #ffffff22;
-}
-
-.ab-cta .label {
-  padding-bottom: 0.8rem;
-}
-
-.ab-cta h2 {
-  margin: 0;
-  font-size: clamp(3rem, 8vw, 8rem);
-  line-height: 0.95;
-  transition: color 0.4s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.ab-cta:hover h2 {
-  transform: translateX(0.2em);
-}
-
-@media (max-width: 720px) {
-  .about .ab-intro {
-    grid-template-columns: 1fr;
-    gap: 7vh;
-    padding-top: 20vh;
-    padding-right: 6vw;
-    padding-bottom: 10vh;
-    padding-left: 6vw;
-  }
-
-  .about .ab-typer {
-    margin-top: 2rem;
-  }
-
-  .ab-closing {
-    grid-template-columns: 1fr;
-    gap: 6vh;
-    margin: 0 6vw;
-    padding: 8vh 0;
-  }
-
-  .about .ab-second {
-    min-height: 0;
-    padding: 0;
-    border-left: 0;
-  }
-
-  .ab-contact {
-    grid-template-columns: 1fr;
-    gap: 1.8rem;
-    padding: 6vh 6vw 8vh;
-  }
-
-  .ab-cta {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 1.2rem;
-    padding: 6vh 6vw 8vh;
-  }
-
-}
-
-/* ---- "За мен": free-flowing editorial story ---- */
-.about {
-  --accent: #c9a86a;
-}
-
+/* ---------- Story ---------- */
 .ab-story {
-  padding: 13vh 8vw 16vh;
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 12vh 8vw 10vh;
+  overflow-x: clip;
+  /* rotating shapes may swing past the edge */
 }
 
 .ab-story-head {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  align-items: end;
-  column-gap: 5vw;
-  max-width: 74rem;
-  margin: 0 auto 10vh;
+  max-width: 40rem;
+  margin: 0 0 6vh;
 }
 
-.ab-story-head>.label {
-  grid-column: 1 / -1;
-  margin-bottom: 1rem;
-}
-
-.ab-title {
-  grid-column: 1;
-  grid-row: 2;
-  margin: 0;
-  font-weight: 280;
-  font-size: clamp(3rem, 10vw, 8rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-
+.ab-section-title {
+  margin: 0 0 1.2rem;
+  font: 400 0.95rem/1.2 var(--sans);
+  letter-spacing: 0.04em;
+  color: var(--bone);
+  opacity: 0.7;
 }
 
 .ab-lead {
-  grid-column: 2;
-  grid-row: 2;
   margin: 0;
-  max-width: 14em;
   font-family: var(--serif);
   font-weight: 300;
-  font-size: clamp(1.8rem, 3vw, 3.4rem);
-  line-height: 1.14;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.7rem, 2.6vw, 2.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   color: var(--accent);
 }
 
-.ab-story-flow {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: 2.5vw;
-  row-gap: 9vh;
-  align-items: start;
-  max-width: 90rem;
-  margin: 0 auto;
+.ab-text {
+  font-family: var(--serif);
+  font-size: clamp(1.1rem, 1.35vw, 1.28rem);
+  line-height: 1.75;
+  color: var(--bone);
 }
 
-.ab-story-photo {
+.ab-text p {
+  margin: 0 0 1.5em;
+  max-width: 34em;
+}
+
+.ab-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Lens --- */
+.ab-lens-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18vh;
+}
+
+.ab-lens-hold {
+  --lens: min(60vw, 68svh);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  margin: clamp(3rem, 12vw, 11rem) 0 clamp(4rem, 14vw, 12rem);
+}
+
+/* only when scroll animation is active: extra 160svh = how long the ring keeps turning */
+.ab-lens-hold.is-held {
+  height: calc(var(--lens) + 160svh);
+}
+
+.ab-lens {
+  position: relative;
+  flex: none;
+  width: var(--lens);
+  aspect-ratio: 1;
   margin: 0;
 }
 
-.ab-story-photo img {
+.ab-lens-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #15151c;
+}
+
+.ab-lens-photo img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* rings sit outside the photo; 520 viewBox / photo diameter 406 = 128% */
+.ab-ring,
+.ab-ticks {
+  position: absolute;
+  top: -14%;
+  left: -14%;
+  width: 128%;
+  height: 128%;
+  pointer-events: none;
+}
+
+.ab-ring text {
+  font: 400 22px var(--sans);
+  fill: var(--accent);
+}
+
+.ab-ticks {
+  color: var(--bone);
+  opacity: 0.45;
+}
+
+.ab-lens figcaption,
+.ab-arch-fig figcaption {
+  font: 400 0.82rem/1.45 var(--sans);
+  letter-spacing: 0.02em;
+  color: var(--bone);
+  opacity: 0.7;
+}
+
+.ab-lens figcaption {
+  position: absolute;
+  top: calc(100% + 14%);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.ab-text-a {
+  align-self: flex-end;
+  width: min(100%, 34em);
+  margin-right: 8%;
+}
+
+/* --- Arch --- */
+.ab-arch {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 3vw;
+  align-items: end;
+  margin-bottom: 22vh;
+}
+
+.ab-arch-fig {
+  grid-column: 1 / 7;
+  margin: 0;
+}
+
+.ab-arch-shape {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 999px 999px 0 0;
   background: #15151c;
 }
 
-.ab-story-photo figcaption {
-  display: flex;
-  align-items: baseline;
-  gap: 0.9rem;
-  margin-top: 1rem;
-  font: 500 0.68rem/1 var(--sans);
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--bone);
+.ab-arch-shape img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.ab-story-photo figcaption span {
-  color: var(--accent);
-  opacity: 0.8;
+.ab-arch-fig figcaption {
+  margin-top: 1.4rem;
 }
 
-.ab-story-photo-main {
-  grid-column: 6 / 13;
-  grid-row: 1;
-  height: min(78vh, 52rem);
-  min-height: 32rem;
+.ab-text-b {
+  grid-column: 8 / 13;
+  padding-bottom: 6vh;
 }
 
-.ab-copy-first {
-  grid-column: 1 / 5;
-  grid-row: 1;
-  align-self: end;
-  padding-bottom: 4vh;
+/* --- Quote --- */
+.ab-quote {
+  margin: 0;
+  padding: 0;
 }
 
-.ab-story-photo-secondary {
-  grid-column: 2 / 6;
-  grid-row: 2;
-  margin-top: 4vh;
-}
-
-.ab-story-photo-secondary img {
-  aspect-ratio: 4 / 5;
-}
-
-.ab-copy-rest {
-  grid-column: 7 / 12;
-  grid-row: 2;
-  margin-top: 16vh;
-}
-
-.ab-p {
-  margin: 0 0 1.9em;
-  max-width: 32em;
-  font-size: clamp(1.05rem, 1.35vw, 1.3rem);
-  line-height: 1.85;
-  color: var(--bone);
-}
-
-/* closing quote */
 .ab-quote p {
-  max-width: 14em;
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 7vw, 7.4rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  will-change: transform;
 }
 
 .ab-quote p+p {
-  margin-top: 0.12em;
+  margin-top: 0.08em;
 }
 
 .ab-quote p.is-accent {
   color: var(--accent);
 }
 
-.ab-quote .mask {
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+/* ---------- Footer ---------- */
+.ab-foot {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 0 8vw 10vh;
 }
 
-.ab-quote .qw {
-  display: inline-block;
+.ab-contact {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 3vw;
+  align-items: baseline;
+  padding: 6vh 0;
+  border-top: 1px solid #ffffff22;
 }
 
+.ab-contact-title {
+  grid-column: 1 / 4;
+  margin: 0;
+  font: 400 0.95rem/1.2 var(--sans);
+  letter-spacing: 0.04em;
+  color: var(--bone);
+  opacity: 0.7;
+}
+
+.ab-contact-body {
+  grid-column: 4 / 13;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.4rem;
+}
+
+.about .ab-mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(1.6rem, 3.6vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+  color: var(--bone);
+  background: linear-gradient(var(--accent), var(--accent)) 0 100% / 0% 1px no-repeat;
+  transition: background-size 0.45s var(--ease-out), color 0.2s ease;
+}
+
+.about .ab-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font: 400 1rem/1.3 var(--sans);
+  letter-spacing: 0.06em;
+  color: var(--bone);
+  opacity: 0.8;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.ab-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+}
+
+.ab-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font: 400 0.95rem/1.2 var(--sans);
+  letter-spacing: 0.03em;
+  color: var(--bone);
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.ab-contact-icon {
+  display: block;
+  flex: 0 0 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ab-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.2rem 0 0;
+  border-top: 1px solid #ffffff22;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+.ab-cta svg {
+  flex: none;
+  transition: transform 0.35s var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about .ab-mail:hover {
+    background-size: 100% 1px;
+    color: var(--accent);
+  }
+
+  .ab-links a:hover {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  .ab-cta:hover {
+    color: var(--accent);
+  }
+
+  .ab-cta:hover svg {
+    transform: translateX(6px);
+  }
+}
+
+.about a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .ab-cta svg,
+  .about .ab-mail {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ---------- Mobile ---------- */
 @media (max-width: 720px) {
+  .about .ab-intro {
+    grid-template-columns: 1fr;
+    gap: 7vh;
+    padding: 20vh 6vw 10vh;
+  }
+
+  .about .ab-typer {
+    margin-top: 2rem;
+  }
+
   .ab-story {
-    padding: 11vh 6vw 12vh;
+    padding: 9vh 6vw 8vh;
   }
 
-  .ab-story-head {
+  .ab-lens-hold {
+    --lens: 66vw;
+    margin: 18vw 0 24vw;
+  }
+
+  .ab-text-a {
+    margin-right: 0;
+  }
+
+  .ab-arch {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1.3rem;
-    margin-bottom: 6vh;
+    align-items: stretch;
+    gap: 6vh;
+    margin-bottom: 14vh;
   }
 
-  .ab-story-head>.label {
-    margin-bottom: 0;
+  .ab-arch-fig {
+    width: 82%;
+    align-self: center;
   }
 
-  .ab-title {
-    font-size: clamp(4rem, 18vw, 7rem);
+  .ab-text-b {
+    padding-bottom: 0;
   }
 
-  .ab-lead {
-    max-width: 17em;
-    font-size: clamp(1.7rem, 7vw, 2.6rem);
+  .ab-quote p {
+    font-size: clamp(2.2rem, 11vw, 4rem);
   }
 
-  .ab-story-flow {
+  .ab-foot {
+    padding: 0 6vw 8vh;
+  }
+
+  .ab-contact {
     display: flex;
     flex-direction: column;
-    gap: 5vh;
+    gap: 1.2rem;
   }
-
-  .ab-story-photo-main {
-    width: 88%;
-    height: min(72vh, 38rem);
-    min-height: 24rem;
-    align-self: flex-end;
-  }
-
-  .ab-copy-first {
-    width: 84%;
-    align-self: flex-start;
-    padding: 0;
-  }
-
-  .ab-story-photo-secondary {
-    width: 69%;
-    align-self: flex-start;
-    margin: 1vh 0 0 8%;
-  }
-
-  .ab-copy-rest {
-    width: 86%;
-    align-self: flex-end;
-    margin: 0;
-  }
-
 }
 </style>

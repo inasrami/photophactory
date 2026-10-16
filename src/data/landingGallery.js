@@ -21,12 +21,16 @@ const imagePaths = [
     { path: 'portraits/Vikaskilim/vk2.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },
   ],
   [
-    { path: 'portraits/Borislava/b3.jpg', alt: 'Borislava' },
-    { path: 'portraits/cowgirl - Kalina/ka4.jpg', alt: 'Kalina' },
-    { path: 'portraits/Elenac/ec3.jpg', alt: 'Eleneac' },
-    { path: 'portraits/Godej/KD-385.jpg', alt: 'Godej' },
-    { path: 'portraits/Ivan i Zdravka/zi1.jpg', alt: 'Ivan i Zdravka' },
-    { path: 'portraits/Vika/vp4.jpg', alt: 'Vika' },
+    { path: 'portraits/Borislava/b3.jpg', alt: 'Borislava', to: '/portraits/borislava' },
+    { path: 'portraits/cowgirl - Kalina/ka4.jpg', alt: 'Kalina', to: '/portraits/cowgirl-kalina' },
+    { path: 'portraits/Elenac/ec3.jpg', alt: 'Elenac', to: '/portraits/elenac' },
+    { path: 'portraits/Godej/KD-385.jpg', alt: 'Godej', to: '/portraits/godej' },
+    {
+      path: 'portraits/Ivan i Zdravka/zi1.jpg',
+      alt: 'Ivan i Zdravka',
+      to: '/portraits/ivan-i-zdravka',
+    },
+    { path: 'portraits/Vika/vp4.jpg', alt: 'Vika', to: '/portraits/vika' },
   ],
   [
     { path: 'portraits/Vikaskilim/vk1.jpg', alt: 'Vikaskilim', to: '/portraits/vikaskilim' },

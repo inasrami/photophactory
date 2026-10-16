@@ -38,29 +38,31 @@ let ctx
 onMounted(async () => {
   addEventListener('keydown', key)
   await nextTick()
-  ctx = gsap.context(() => {
-    gsap.from('.c-title .ch', { yPercent: 110, duration: 1.3, stagger: 0.03, ease: 'expo.out', delay: 1.1 })
-    gsap.from('.c-info > *', { opacity: 0, y: 20, stagger: 0.12, duration: 1, delay: 1.5 })
-    gsap.to('.c-img', { yPercent: 15, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
-    gsap.utils.toArray('.shot').forEach((el, i) => {
-      const img = el.firstChild, k = ((i % 3) + 1) * 28
-      gsap.fromTo(el, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.5, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
-      gsap.from(img, { scale: 1.45, duration: 1.8, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
-      gsap.fromTo(el, { y: k }, { y: -k, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true } })
-    })
-    gsap.from('.story-head > *', { opacity: 0, y: 40, stagger: 0.15, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: '.story', start: 'top 80%' } })
-    gsap.utils.toArray('.story-sentence').forEach((sentence) => {
-      gsap.from(sentence, {
-        opacity: 0,
-        y: 28,
-        duration: 1,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: sentence, start: 'top 88%' },
+  requestAnimationFrame(() => {
+    ctx = gsap.context(() => {
+      gsap.from('.c-title .ch', { yPercent: 110, duration: 1.3, stagger: 0.03, ease: 'expo.out', delay: 1.1 })
+      gsap.from('.c-info > *', { opacity: 0, y: 20, stagger: 0.12, duration: 1, delay: 1.5 })
+      gsap.to('.c-img', { yPercent: 15, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
+      gsap.utils.toArray('.shot').forEach((el, i) => {
+        const img = el.firstChild, k = ((i % 3) + 1) * 28
+        gsap.fromTo(el, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.5, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
+        gsap.from(img, { scale: 1.45, duration: 1.8, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } })
+        gsap.fromTo(el, { y: k }, { y: -k, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true } })
       })
-    })
-    gsap.to('.c-title', { yPercent: -40, opacity: 0, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
-    gsap.fromTo('.next h2', { letterSpacing: '0.25em', opacity: 0.15 }, { letterSpacing: '-0.03em', opacity: 1, ease: 'none', scrollTrigger: { trigger: '.next', start: 'top 90%', end: 'top 30%', scrub: true } })
-  }, root.value)
+      gsap.from('.story-head > *', { opacity: 0, y: 40, stagger: 0.15, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: '.story', start: 'top 80%' } })
+      gsap.utils.toArray('.story-sentence').forEach((sentence) => {
+        gsap.from(sentence, {
+          opacity: 0,
+          y: 28,
+          duration: 1,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: sentence, start: 'top 88%' },
+        })
+      })
+      gsap.to('.c-title', { yPercent: -40, opacity: 0, ease: 'none', scrollTrigger: { trigger: '.c-hero', start: 'top top', end: 'bottom top', scrub: true } })
+      gsap.fromTo('.next h2', { letterSpacing: '0.25em', opacity: 0.15 }, { letterSpacing: '-0.03em', opacity: 1, ease: 'none', scrollTrigger: { trigger: '.next', start: 'top 90%', end: 'top 30%', scrub: true } })
+    }, root.value)
+  })
 })
 onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
 </script>
@@ -71,8 +73,8 @@ onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
       <div class="hero-scrim" />
       <div class="c-info"><span class="label">{{ c.type }}</span><span class="label">{{ c.sub }}</span><span
           class="label">{{ c.shots.length }} frames</span></div>
-      <h1 class="c-title" :style="{ '--n': c.title.length }"><span v-for="(ch, i) in c.title.toUpperCase().split('')" :key="i" class="mask"><span
-            class="ch">{{ ch === ' ' ? '\u00A0' : ch }}</span></span></h1>
+      <h1 class="c-title" :style="{ '--n': c.title.length }"><span v-for="(ch, i) in c.title.toUpperCase().split('')"
+          :key="i" class="mask"><span class="ch">{{ ch === ' ' ? '\u00A0' : ch }}</span></span></h1>
     </section>
     <section v-if="c.text.length" class="story">
       <div class="story-head">
@@ -99,7 +101,7 @@ onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
         <button class="lb-x label" @click="open = -1">Close</button>
         <button class="lb-p label" @click="go(-1)">←</button><button class="lb-n label" @click="go(1)">→</button>
         <span class="lb-c label">{{ String(open + 1).padStart(2, '0') }} / {{ String(c.shots.length).padStart(2, '0')
-          }}</span>
+        }}</span>
       </div>
     </Transition>
   </main>
