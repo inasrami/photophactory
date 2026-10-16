@@ -9,11 +9,7 @@
 /* Keep the About quote in Marck Script; use static PT Serif for album copy. */
 :lang(bg) .ab-quote p {
   font-family: var(--font-cursive) !important;
-<<<<<<< HEAD
-  font-size: clamp(1.6rem, 2.6vw, 2.4rem) !important;
-=======
   font-size: clamp(1.6rem, 2.6vw, 2rem) !important;
->>>>>>> bff6de4 (Initial commit with optimized images)
   line-height: 1.5 !important;
   letter-spacing: 0.01em !important;
   font-weight: 400 !important;
@@ -22,10 +18,7 @@
 :lang(bg) .story-sentence p,
 :lang(bg) .story-bg {
   font-family: var(--font-album-serif) !important;
-<<<<<<< HEAD
-=======
   font-size: clamp(1rem, 1.5vw, 3rem) !important;
->>>>>>> bff6de4 (Initial commit with optimized images)
   font-weight: 400 !important;
   letter-spacing: 0.01em !important;
   text-transform: none !important;
