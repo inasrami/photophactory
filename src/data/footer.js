@@ -14,7 +14,7 @@ export const footer = {
   motto: ['Let’s make', 'something still.'],
   contactTitle: 'Book a session',
   contactLines: ['Concerts · Portraits'],
-  email: 'hello@photophactory.com',
+  email: 'krasi@photophactory.one',
   navigationTitle: 'Navigate',
   // columns of links: { label, to } = router link, { label, href } = plain link
   navigation: [

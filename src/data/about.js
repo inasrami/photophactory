@@ -15,7 +15,7 @@ export const about = {
   quote: ['Не търся един стил.', 'Търся своя начин да разказвам.'],
   contact: {
     label: 'Контакти',
-    email: 'hello@photophactory.com',
+    email: 'krasi@photophactory.one',
     phone: '+359884877149',
     links: [
       { label: '@photophactory.one', href: 'https://instagram.com/photophactory.one' },

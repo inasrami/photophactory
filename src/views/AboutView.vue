@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <RouterLink to="/work" class="ab-cta">
-        <span>Вижте всички работи</span>
+        <span> View all work</span>
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"
           aria-hidden="true">
           <path d="M3 12h17M14 6l6 6-6 6" />
