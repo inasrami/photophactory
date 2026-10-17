@@ -9,7 +9,8 @@ onMounted(() => {
   const y = gsap.quickTo(ring.value, 'y', { duration: 0.45, ease: 'power3' })
   gsap.set(ring.value, { scale: 0, opacity: 0 })
   let shown = false
-  addEventListener('mousemove', (e) => { x(e.clientX); y(e.clientY) })
+  // ⚡ OPTIMIZED: passive listener so mouse moves never block scrolling/compositing
+  addEventListener('mousemove', (e) => { x(e.clientX); y(e.clientY) }, { passive: true })
   document.addEventListener('mouseover', (e) => {
     const t = e.target.closest?.('[data-cursor]')
     if (t) label.value = t.dataset.cursor

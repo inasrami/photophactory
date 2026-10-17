@@ -6,17 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- ⚡ OPTIMIZED: was 2 RENDER-BLOCKING stylesheets requesting 7 font families (Manrope, Onest, Plus Jakarta Sans,
+         Syne, Edu QLD Hand, PT Serif, Marck Script) of which only Marck Script + PT Serif are referenced anywhere in
+         the code. Now: one request, only the two used families/weights, loaded without blocking first paint. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Marck+Script&family=Onest:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Syne:wght@400;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Marck+Script&family=PT+Serif:ital,wght@0,400;1,400&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Edu+QLD+Hand:wght@400..700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="preload" as="image" href="/images/hero-portrait.jpg" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/logoLoader.png" />
-    <link rel="preload" as="image" href="/images/loader-background.jpg" />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Marck+Script&family=PT+Serif:ital,wght@0,400;1,400&display=swap"
+      />
+    </noscript>
+    <!-- ⚡ OPTIMIZED: removed <link rel="preload" href="/images/hero-portrait.jpg">: nothing on the site uses that
+         image, so every visitor was downloading 158KB for nothing. Loader assets below are now WebP. -->
+    <link rel="preload" as="image" href="/images/logoLoader.webp" type="image/webp" />
+    <link rel="preload" as="image" href="/images/loader-background.webp" type="image/webp" />
     <meta
       name="description"
       content="Photophactory - concert, portrait, and people photography captured with feeling."
@@ -33,24 +41,8 @@
         margin: 0;
         overflow: hidden;
       }
-      .rubik-scribble-regular {
-        font-family: 'Rubik Scribble', system-ui;
-        font-weight: 400;
-        font-style: normal;
-      }
-
-      .tektur-regular {
-        font-family: 'Tektur', sans-serif;
-        font-optical-sizing: auto;
-        font-weight: 400;
-        font-style: normal;
-        font-variation-settings: 'wdth' 100;
-      }
-      .bebas-neue-regular {
-        font-family: 'Bebas Neue', sans-serif;
-        font-weight: 400;
-        font-style: normal;
-      }
+      /* 🧹 CLEANUP: removed .rubik-scribble-regular / .tektur-regular / .bebas-neue-regular - never used in any
+         template and their fonts were never loaded. */
 
       /* --- LOADER BACKDROP --- */
       .load-wrapper {
@@ -67,7 +59,7 @@
       .load-bg {
         position: absolute;
         inset: 0;
-        background: url('/images/loader-background.jpg') center / cover no-repeat;
+        background: url('/images/loader-background.webp') center / cover no-repeat;
       }
 
       .load-shade {
@@ -126,7 +118,7 @@
         position: absolute;
         top: 0;
         height: 100%;
-        background: url('/images/logoLoader.png') no-repeat;
+        background: url('/images/logoLoader.webp') no-repeat;
         opacity: 0;
         will-change: transform, opacity;
       }
@@ -172,9 +164,9 @@
       .load-count {
         margin-top: 12px;
         text-align: center;
-        font-family: 'Fraunces', serif;
         font-weight: 300;
         font-size: 14px;
+        /* 🧹 CLEANUP: dropped the duplicated font-family (the 'Fraunces' line was always overridden by this one) */
         font-family: 'Cormorant Garamond', serif;
         opacity: 0.85;
       }
@@ -237,7 +229,8 @@
         const title = $('.load-title')
 
         const MIN_SECONDS = 0.9
-        const MAX_WAIT = 5000
+        // ⚡ OPTIMIZED: 5000 -> 3000ms. Safety cap so a slow connection never keeps visitors staring at the loader.
+        const MAX_WAIT = 3000
 
         const COLORS = [
           [255, 61, 154],

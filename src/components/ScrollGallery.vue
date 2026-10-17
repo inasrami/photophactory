@@ -16,12 +16,17 @@ let ctx
 
 onMounted(() => {
     ctx = gsap.context(() => {
-        const scrollTrigger = { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true }
-        gsap.fromTo(translateEl.value, { y: 0 }, { y: 384, ease: 'none', scrollTrigger })
-        gsap.fromTo(insetEl.value, { clipPath: 'inset(0px 48px)' }, { clipPath: 'inset(0px 0px)', ease: 'none', scrollTrigger })
-        gsap.fromTo(scaleEl.value, { scale: 1.2 }, { scale: 1, ease: 'none', scrollTrigger })
+        // ⚡ OPTIMIZED: was 3 + one-per-column separate ScrollTriggers (each with its own scrub + listener) all sharing the
+        // same trigger/range. One timeline = ONE ScrollTrigger driving every tween at position 0 -> identical motion.
+        const tl = gsap.timeline({
+            defaults: { ease: 'none', duration: 1 },
+            scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true },
+        })
+        tl.fromTo(translateEl.value, { y: 0 }, { y: 384 }, 0)
+            .fromTo(insetEl.value, { clipPath: 'inset(0px 48px)' }, { clipPath: 'inset(0px 0px)' }, 0)
+            .fromTo(scaleEl.value, { scale: 1.2 }, { scale: 1 }, 0)
         colEls.value.forEach((el, i) => {
-            if (el) gsap.fromTo(el, { yPercent: 0 }, { yPercent: colSpeeds[i] ?? 0, ease: 'none', scrollTrigger })
+            if (el) tl.fromTo(el, { yPercent: 0 }, { yPercent: colSpeeds[i] ?? 0 }, 0)
         })
     }, root.value)
 })
@@ -75,6 +80,7 @@ onBeforeUnmount(() => ctx?.revert())
 }
 
 .sg__scale {
+    will-change: transform; /* ⚡ OPTIMIZED: scaled every scroll frame -> promote to its own layer */
     display: flex;
     gap: 0.5rem;
     padding: 0 1.5rem;
@@ -82,6 +88,7 @@ onBeforeUnmount(() => ctx?.revert())
 }
 
 .sg__col {
+    will-change: transform; /* ⚡ OPTIMIZED: parallax columns move every scroll frame */
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

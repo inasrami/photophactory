@@ -16,7 +16,7 @@
             {{ currentItem?.title ?? "" }}, {{ pad(active + 1) }} of {{ pad(items.length) }}
             {{ focused ? ", focused" : "" }}
         </p>
-        <FlutedGlassBackground v-if="!failed" />
+        <ShaderCanvas v-if="!failed" preset="fluted" />
         <!-- WebGL Canvas or Fallback -->
         <div v-if="failed"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111111; color: #ffffff;">
@@ -51,7 +51,8 @@
 
 <script lang="ts">
 import type { CSSProperties } from "vue";
-import FlutedGlassBackground from "@/components/Flutedglassbackground.vue";
+// ⚡ OPTIMIZED: Flutedglassbackground.vue merged into the shared ShaderCanvas.vue
+import ShaderCanvas from "@/components/ShaderCanvas.vue";
 
 export interface LiquidGlassCarouselItem {
     src: string;

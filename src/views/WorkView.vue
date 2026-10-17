@@ -3,7 +3,8 @@ import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import Workwheel from '@/components/workwheel.vue'
-import FlutedGlassBackground from '@/components/Flutedglassbackground.vue'
+// ⚡ OPTIMIZED: Flutedglassbackground.vue merged into the shared ShaderCanvas.vue
+import ShaderCanvas from '@/components/ShaderCanvas.vue'
 import { collections, workWheelImages } from '@/data/workWheelImages'
 
 const router = useRouter()
@@ -24,7 +25,8 @@ const pad = (n) => String(n).padStart(2, '0')
 
 const root = shallowRef(null)
 const preview = shallowRef(null)
-const previewImage = ref(collections[0]?.cover ?? '')
+// ⚡ OPTIMIZED: hover preview (280×360px) uses the 960px thumbnail instead of the full 1920px photo
+const previewImage = ref(collections[0]?.coverThumb ?? '')
 const previewVisible = ref(false)
 
 let idx = 0
@@ -168,7 +170,7 @@ onBeforeUnmount(() => {
 
 <template>
     <main ref="root" class="work">
-        <FlutedGlassBackground fixed />
+        <ShaderCanvas preset="fluted" fixed />
 
         <section class="w-wheel">
             <Workwheel :items="items" @activeChange="onActive" @focusChange="onFocus" />
@@ -185,7 +187,7 @@ onBeforeUnmount(() => {
             </header>
             <div class="w-list">
                 <RouterLink v-for="c in collections" :key="c.slug" :to="`/${c.type}/${c.slug}`" class="row w-row"
-                    @mouseenter="showAlbumPreview($event, c.cover)" @mousemove="moveAlbumPreview"
+                    @mouseenter="showAlbumPreview($event, c.coverThumb)" @mousemove="moveAlbumPreview"
                     @mouseleave="hideAlbumPreview">
                     <h3>{{ c.title }}</h3>
                     <span class="sub">{{ c.type }}{{ c.sub ? ' · ' + c.sub : '' }}</span>

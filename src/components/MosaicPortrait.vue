@@ -171,6 +171,7 @@ function kick() {
 onMounted(() => {
   reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   const im = new Image()
+  im.crossOrigin = 'anonymous' // ⚡ OPTIMIZED: lets the canvas read pixels even if photos are served from another domain/CDN
   im.decoding = 'async'
   im.onload = () => {
     img = im

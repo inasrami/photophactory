@@ -5,8 +5,9 @@ const root = ref(null)
 let ctx
 onMounted(() => {
     ctx = gsap.context(() => {
-        gsap.utils.toArray('.orb').forEach((o) =>
-            gsap.to(o, { x: () => gsap.utils.random(-15, 15) + 'vw', y: () => gsap.utils.random(-12, 12) + 'vh', duration: gsap.utils.random(14, 22), ease: 'sine.inOut', repeat: -1, yoyo: true, repeatRefresh: true }))
+        // ⚡ OPTIMIZED: the 3 endless "orb" drift tweens (random x/y, 14-22s yoyo, repeatRefresh) were driven by
+        // GSAP's JS ticker every frame. They are now plain CSS keyframe animations (see .o1/.o2/.o3 in
+        // luxury.css) which run on the compositor thread, so the main thread only handles the two scroll-scrubs.
         gsap.to('.orbs', { yPercent: -22, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 1.5 } })
         gsap.to('.bk-dial', { rotation: 140, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 1 } })
     }, root.value)

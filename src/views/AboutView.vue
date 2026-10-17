@@ -4,10 +4,12 @@ import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { about } from '@/data/about'
 import TyperText from '@/components/TyperText.vue'
 import MosaicPortrait from '@/components/MosaicPortrait.vue'
-import sig from '@/images/podpis.png'
-import me1 from '@/images/optimized/Me/me1.jpg?url'
-import me2 from '@/images/optimized/Me/me2.jpg?url'
-import me3 from '@/images/Me/me3.png?url'
+// ⚡ OPTIMIZED: portraits are WebP served from the VPS (me3: 1.9MB PNG -> 56KB). The small signature stays bundled.
+import sig from '@/assets/podpis.webp'
+import { fullUrl } from '@/data/photos'
+const me1 = fullUrl('Me/me1.webp')
+const me2 = fullUrl('Me/me2.webp')
+const me3 = fullUrl('Me/me3.webp')
 
 const root = ref(null)
 
