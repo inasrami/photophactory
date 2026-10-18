@@ -1099,16 +1099,45 @@ function createCarousel(
 
     function inputLocked() { return focusState.active || entryActive || entrySettled; }
 
+    // 🛠 FIXED: the vertical band the strip occupies (top of the highest panel to bottom of the lowest). Wheel input
+    // anywhere inside this band - on a photo OR in the gap between photos - belongs to the strip, not to the page.
+    function inStrip(py: number) {
+        let top = Infinity;
+        let bottom = -Infinity;
+        for (let i = 0; i < panelRectCount; i++) {
+            const r = panelRects[i]!;
+            if (r.top < top) top = r.top;
+            if (r.bottom > bottom) bottom = r.bottom;
+        }
+        if (top === Infinity) {
+            const half = (PANEL_H * FOCUS.centerScale) / 2;
+            top = H / 2 - half;
+            bottom = H / 2 + half;
+        }
+        return py >= top && py <= bottom;
+    }
+
     function onWheel(e: WheelEvent) {
-        if (inputLocked() || !mostlyVisible) return;
+        if (!mostlyVisible) return;
 
         const p = localPoint(e);
-        if (!panelAtPointer(p.x, p.y)) return;
 
+        // A focused photo is open: never let the page scroll behind it.
+        if (focusState.active) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        if (inputLocked() || !inStrip(p.y)) return;
+
+        // 🛠 FIXED: preventDefault only stops the browser's own scrolling. The page uses Lenis smooth-scroll, which listens
+        // on `window` and scrolls the page by itself, so the event also has to be stopped before it bubbles up there.
         e.preventDefault();
+        e.stopPropagation();
         userInteracted = true;
         pendingFocus = null;
-        target += (e.deltaY || e.deltaX) * WHEEL;
+        // trackpads can send mostly-horizontal swipes: use whichever axis is stronger
+        target += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * WHEEL;
         lastInput = performance.now();
         snapped = false;
         startLoop();

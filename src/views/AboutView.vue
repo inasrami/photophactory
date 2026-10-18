@@ -280,7 +280,9 @@ onBeforeUnmount(() => {
   height: auto;
   margin: 0;
   display: block;
-  filter: brightness(0) invert(1);
+  /* 🛠 FIXED (Safari): removed `filter: brightness(0) invert(1)`. Safari drops that filter chain on an image whose
+     clip-path is animated, so the signature rendered BLACK there. podpis.webp is now white already (with its soft
+     shadow baked in), so no CSS filter is needed and Chrome / Safari / Firefox look the same. */
   opacity: 0.9;
 }
 
@@ -290,7 +292,7 @@ onBeforeUnmount(() => {
   bottom: 3%;
   z-index: 1;
   width: clamp(9rem, 17vw, 16rem);
-  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
+  /* drop-shadow is baked into podpis.webp (was `filter: ... drop-shadow(0 2px 8px rgba(0,0,0,.7))`) */
 }
 
 /* ---------- Story ---------- */
@@ -640,6 +642,15 @@ onBeforeUnmount(() => {
 
 /* ---------- Mobile ---------- */
 @media (max-width: 720px) {
+  /* 🛠 FIXED (mobile): the signature sits in the notch cut out of the portrait's bottom-right corner. That notch is
+     ~22% of the portrait's width, but the desktop size has a 9rem minimum, which on a phone is ~37% of the width and
+     spilled over the photo. On phones it is now sized relative to the portrait so it stays inside the notch. */
+  .ab-portrait-signature {
+    width: 21%;
+    right: 3%;
+    bottom: 2%;
+  }
+
   .about .ab-intro {
     grid-template-columns: 1fr;
     gap: 7vh;
