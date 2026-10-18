@@ -120,7 +120,16 @@ const onFocus = (open) => {
     }
 }
 
+// ⚡ OPTIMIZED: /work used to render TWO full-screen glass shaders at the same time: this fixed one and another inside
+// the wheel. While the wheel fills the whole screen the fixed one is completely hidden behind it, so it is paused
+// (it resumes the moment the wheel scrolls partly out of view, so the page below keeps its animated background).
+const wheelEl = ref(null)
+const wheelCoversScreen = ref(false)
+let wheelIO = null
+
 onMounted(() => {
+    wheelIO = new IntersectionObserver(([e]) => { wheelCoversScreen.value = e.intersectionRatio >= 0.98 }, { threshold: [0, 0.98, 1] })
+    if (wheelEl.value) wheelIO.observe(wheelEl.value)
     updateMetrics()
     window.addEventListener('resize', updateMetrics, { passive: true })
 
@@ -159,6 +168,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     isNavigating = true
+    wheelIO?.disconnect()
     clearTimeout(focusTimer)
     if (previewRaf) cancelAnimationFrame(previewRaf)
     window.removeEventListener('resize', updateMetrics)
@@ -170,9 +180,9 @@ onBeforeUnmount(() => {
 
 <template>
     <main ref="root" class="work">
-        <ShaderCanvas preset="fluted" fixed />
+        <ShaderCanvas preset="fluted" fixed :paused="wheelCoversScreen" />
 
-        <section class="w-wheel">
+        <section ref="wheelEl" class="w-wheel">
             <Workwheel :items="items" @activeChange="onActive" @focusChange="onFocus" />
         </section>
 

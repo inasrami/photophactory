@@ -543,6 +543,17 @@ function createCarousel(
     const SHRINK_ATTACK = 0.25;
     const SHRINK_DECAY = 0.06;
 
+    // ⚡ OPTIMIZED: when nothing moves, the lens shimmer is the only thing animating. It used to re-render the whole
+    // scene + lens shader at the full 60fps forever; the shimmer is slow, so 30fps looks identical at half the GPU cost.
+    const IDLE_FRAME_MS = 1000 / 30;
+    let idleShimmerOnly = false;
+    let lastRenderAt = 0;
+
+    // ⚡ OPTIMIZED: resolution governor. If real frames keep taking >30ms, step the render resolution down.
+    let slowTicks = 0;
+    let govCooldown = 0;
+    let lastTickAt = 0;
+
     let renderer: THREE.WebGLRenderer;
     try {
         renderer = new THREE.WebGLRenderer({
@@ -556,7 +567,10 @@ function createCarousel(
         return null;
     }
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // ⚡ OPTIMIZED: pixel-ratio cap is no longer fixed. A small governor (see `governor()` below) lowers it on
+    // machines that can't keep up, so slow GPUs get a slightly softer picture instead of a laggy one.
+    let qualityCap = 1.5;
+    const dpr = Math.min(window.devicePixelRatio || 1, qualityCap);
     renderer.setPixelRatio(dpr);
     renderer.setSize(W, H);
     renderer.setClearColor(0x000000, 0);
@@ -1406,11 +1420,42 @@ function createCarousel(
     );
     io.observe(mount);
 
+    function applyPixelRatio() {
+        const ratio = Math.min(window.devicePixelRatio || 1, qualityCap);
+        renderer.setPixelRatio(ratio);
+        rt.setSize(W * ratio, H * ratio);
+        lensUniforms.uRes.value.set(W * ratio, H * ratio);
+        sceneDirty = true;
+    }
+
+    function governor(frameMs: number) {
+        if (govCooldown > 0) { govCooldown--; return; }
+        slowTicks = frameMs > 30 ? slowTicks + 1 : Math.max(0, slowTicks - 2);
+        if (slowTicks > 40) {
+            const current = Math.min(window.devicePixelRatio || 1, qualityCap);
+            if (current > 0.75) {
+                qualityCap = Math.max(0.75, current - (current > 1 ? 0.25 : 0.125));
+                applyPixelRatio();
+            }
+            slowTicks = 0;
+            govCooldown = 90;
+        }
+    }
+
     function tick() {
         if (!running) return;
-        if (document.hidden || !inView) { raf = 0; return; }
+        if (document.hidden || !inView) { raf = 0; lastTickAt = 0; return; }
 
         const now = performance.now();
+
+        // ⚡ OPTIMIZED: idle shimmer runs at 30fps (skip this rAF if the last render was <33ms ago and nothing else is happening)
+        if (idleShimmerOnly && !sceneDirty && !dragging && velocity === 0 && !pendingFocus && !focusState.active && !focusState.animating && now - lastRenderAt < IDLE_FRAME_MS) {
+            raf = requestAnimationFrame(tick);
+            return;
+        }
+        lastRenderAt = now;
+        if (!idleShimmerOnly && lastTickAt) { const ms = now - lastTickAt; if (ms < 250) governor(ms); }
+        lastTickAt = now;
 
         if (!dragging) {
             target += velocity;
@@ -1507,10 +1552,13 @@ function createCarousel(
 
         const lensNeedsTime = (lensUniforms.uShimmer.value > 0.5 && lensUniforms.uBlueRing.value > 0.0001) || LENS.spin !== 0;
 
+        idleShimmerOnly = !isMoving && lensNeedsTime;
+
         if (isMoving || lensNeedsTime) {
             raf = requestAnimationFrame(tick);
         } else {
             raf = 0;
+            lastTickAt = 0;
         }
     }
 
@@ -1547,7 +1595,7 @@ function createCarousel(
         camera.top = H / 2;
         camera.bottom = -H / 2;
         camera.updateProjectionMatrix();
-        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+        const ratio = Math.min(window.devicePixelRatio || 1, qualityCap);
         renderer.setPixelRatio(ratio);
         rt.setSize(W * ratio, H * ratio);
         lensUniforms.uRes.value.set(W * ratio, H * ratio);

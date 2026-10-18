@@ -387,6 +387,17 @@ onBeforeUnmount(() => {
 }
 
 /* rings sit outside the photo; 520 viewBox / photo diameter 406 = 128% */
+/* ⚡ OPTIMIZED: everything GSAP moves on scroll gets its own GPU layer, so rotating the SVG text ring, scaling the
+   photos and sliding the lens no longer repaints text/images on the CPU every frame */
+.ab-ring,
+.ab-ticks,
+.ab-lens,
+.ab-lens-photo img,
+.ab-arch-shape,
+.ab-arch-shape img {
+  will-change: transform;
+}
+
 .ab-ring,
 .ab-ticks {
   position: absolute;

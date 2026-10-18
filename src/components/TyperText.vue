@@ -319,6 +319,9 @@ onBeforeUnmount(() => {
 [data-typer] .word {
   white-space: pre;
   display: inline-block;
+  /* ⚡ OPTIMIZED: each glyph changes class ~20×/s. Containment keeps those style/layout updates (and the :has()
+     neighbour checks below) inside one word instead of re-checking the whole paragraph. */
+  contain: layout style;
 }
 [data-typer] .space {
   white-space: pre;

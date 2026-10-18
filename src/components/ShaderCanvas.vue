@@ -1,13 +1,16 @@
 <script setup>
 // ⚡ OPTIMIZED: replaces ShaderBackground.vue + Flutedglassbackground.vue (two ~500-line duplicates).
 // One component, one WebGL setup, `preset` picks the look. GLSL + constants live in @/lib/shaders.js.
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { PRESETS, VERT } from '@/lib/shaders'
 
 const props = defineProps({
   preset: { type: String, default: 'mesh' }, // 'mesh' (hero) | 'fluted' (/work)
   // true = pinned to the viewport, false = fills the nearest positioned parent
   fixed: { type: Boolean, default: false },
+  // ⚡ OPTIMIZED: lets a parent stop rendering while this canvas is fully covered by something else
+  // (WorkView pauses the fixed glass while the wheel's own glass fills the whole screen).
+  paused: { type: Boolean, default: false },
 })
 
 const canvas = ref(null)
@@ -22,6 +25,11 @@ let intersectionObserver = null
 let loc = {}
 
 let onScreen = true // ⚡ OPTIMIZED: toggled by IntersectionObserver
+// ⚡ OPTIMIZED: dynamic resolution. Starts at full 1×; if the GPU can't hold ~35fps the canvas quietly renders
+// at a smaller size (down to 0.5×) and the browser upscales it. Fast PCs never leave 1×, slow ones stay smooth.
+let scale = 1
+let slowFrames = 0
+let cooldown = 0
 let last = 0
 let time = 0
 let presence = 0
@@ -48,8 +56,8 @@ function resize() {
   if (!el || !gl) return
   // ⚡ OPTIMIZED: render at 1× instead of up to 2×. These are soft gradient backgrounds, so the browser's
   // upscale is not noticeable, but retina screens now shade 4× fewer pixels every frame.
-  const w = Math.max(1, el.clientWidth)
-  const h = Math.max(1, el.clientHeight)
+  const w = Math.max(1, Math.round(el.clientWidth * scale))
+  const h = Math.max(1, Math.round(el.clientHeight * scale))
   if (el.width !== w || el.height !== h) {
     el.width = w
     el.height = h
@@ -62,6 +70,18 @@ function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.1)
   last = now
   time += dt
+
+  // ⚡ OPTIMIZED: resolution governor (see `scale` above). Only ever steps down, with a cool-down between steps.
+  if (cooldown > 0) cooldown--
+  else {
+    slowFrames = dt > 0.028 ? slowFrames + 1 : Math.max(0, slowFrames - 2)
+    if (slowFrames > 45 && scale > 0.5) {
+      scale = Math.max(0.5, scale * 0.8)
+      slowFrames = 0
+      cooldown = 90
+      resize()
+    }
+  }
 
   // Ease cursor presence and position so the push never snaps.
   const k = Math.min(1, dt * 8)
@@ -81,7 +101,7 @@ function frame(now) {
 // ⚡ OPTIMIZED: the loop only runs while the canvas is on screen AND the tab is visible.
 // Before, the hero shader kept rendering full-screen underneath the whole page after you scrolled away.
 function sync() {
-  const shouldRun = onScreen && !document.hidden && !!gl
+  const shouldRun = onScreen && !document.hidden && !props.paused && !!gl
   if (shouldRun && !raf) {
     last = performance.now()
     raf = requestAnimationFrame(frame)
@@ -114,6 +134,8 @@ function onContextLost(e) {
   cancelAnimationFrame(raf)
   raf = 0
 }
+
+watch(() => props.paused, sync)
 
 onMounted(() => {
   const el = canvas.value
