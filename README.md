@@ -36,3 +36,12 @@ npm run dev
 ```sh
 npm run build
 ```
+
+### Run with Docker
+
+```sh
+docker build -t photophactory .
+docker run --rm -p 8080:80 photophactory
+```
+
+Open [http://localhost:8080](http://localhost:8080).
