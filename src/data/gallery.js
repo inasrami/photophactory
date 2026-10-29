@@ -14,6 +14,7 @@ const slugify = (s) =>
 const projects = [
   {
     folder: 'fightNight',
+    slug: 'fight-night-6',
     title: 'Fight Night',
     sub: 'NOTO',
     cover: 'Fight1.webp',
@@ -21,13 +22,8 @@ const projects = [
     shots: ['Fight3.webp', 'Fight4.webp', 'Fight5.webp', 'Fight6.webp', 'Fight7.webp', 'Fight8.webp'],
   },
   {
-    folder: 'portraits/Borislava',
-    title: 'Borislava',
-    cover: 'GB.webp',
-    shots: ['b1.webp', 'b2.webp', 'b3.webp'],
-  },
-  {
     folder: 'portraits/Elena',
+    slug: 'deep-red',
     title: 'Elena',
     cover: 'e1.webp',
     tall: 'DE.webp',
@@ -45,6 +41,7 @@ const projects = [
   },
   {
     folder: 'portraits/Elenac',
+    slug: 'without-permission',
     title: 'Elenac',
     cover: 'GEC.webp',
     shots: [
@@ -61,6 +58,7 @@ const projects = [
   },
   {
     folder: 'portraits/Godej',
+    slug: 'light-between-us',
     title: 'Godej',
     cover: 'GIF.webp',
     shots: [
@@ -76,6 +74,7 @@ const projects = [
   },
   {
     folder: 'portraits/Ivan i Zdravka',
+    slug: 'tide-of-light',
     title: 'Ivan i Zdravka',
     cover: 'GZI.webp',
     tall: 'DZI.webp',
@@ -96,6 +95,7 @@ const projects = [
   },
   {
     folder: 'portraits/cowgirl - Kalina',
+    slug: 'golden-west',
     title: 'Kalina',
     cover: 'GK.webp',
     tall: 'DK.webp',
@@ -103,6 +103,7 @@ const projects = [
   },
   {
     folder: 'portraits/Valeto',
+    slug: 'floor-zero',
     title: 'Valeto',
     cover: 'GV.webp',
     tall: 'DV.webp',
@@ -110,6 +111,7 @@ const projects = [
   },
   {
     folder: 'portraits/Vika',
+    slug: 'breath-of-wind',
     title: 'Vika',
     cover: 'GVP.webp',
     tall: 'DVP.webp',
@@ -127,6 +129,7 @@ const projects = [
   },
   {
     folder: 'portraits/Vikaskilim',
+    slug: 'inside',
     title: 'Vikaskilim',
     cover: 'GVK.webp',
     tall: 'DVK.webp',
@@ -134,12 +137,14 @@ const projects = [
   },
   {
     folder: 'concerts/Ivo Dimchev - Plovdiv, Antichen teatar',
+    slug: 'ivo-dimchev-plovdiv',
     cover: 'GID.webp',
     tall: 'DID.webp',
     shots: ['id1.webp', 'id2.webp', 'id3.webp', 'id4.webp'],
   },
   {
     folder: 'concerts/Kerana & Kosmonavtite',
+    slug: 'kerana-kosmonavtite',
     cover: 'GK.webp',
     tall: 'DK.webp',
     shots: [
@@ -158,6 +163,7 @@ const projects = [
   },
   {
     folder: 'concerts/NOTO',
+    slug: 'noto',
     cover: 'n1.webp',
     tall: 'n2.webp',
     shots: [
@@ -190,6 +196,7 @@ const projects = [
   },
   {
     folder: 'concerts/Torino & Pashata',
+    slug: 'torino-pashata',
     cover: 'GTP.webp',
     tall: 'DTP.webp',
     shots: [
@@ -215,6 +222,7 @@ const projects = [
 ]
 
 // ⚙️ Nothing to edit below
+// Tip: to change an album's URL without renaming its folder, add `slug: 'my-custom-name'` to its entry above.
 export const collections = projects.map((p) => {
   const parts = p.folder.split('/')
   const type = parts.length > 1 ? parts[0] : 'concerts'
@@ -234,7 +242,10 @@ export const collections = projects.map((p) => {
     titleBg: story && story.titleBg !== story.title ? story.titleBg : '',
     text: story?.text ?? [],
     sub: (p.sub ?? sub).trim(),
-    slug: slugify(name),
+    // `key` = slug derived from the folder name (stable, used to match work-wheel images).
+    // `slug` = what shows in the URL: the optional `slug` field of the project, else the folder-based one.
+    key: slugify(name),
+    slug: p.slug ? slugify(p.slug) : slugify(name),
     all: [cover, tall, ...shots].filter(Boolean),
     shots,
     cover: (cover || shots[0])?.url,

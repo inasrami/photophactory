@@ -23,7 +23,7 @@ onMounted(() => {
 <template>
   <main ref="root">
     <HeroSection :images="heroImages" class="hero" />
-    <!-- 🧹 CLEANUP: removed the commented-out "Behind the lens" section and rooms header -->
+
     <section id="rooms" class="rooms">
       <ScrollGallery :columns="galleryColumns" />
 

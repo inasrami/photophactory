@@ -73,7 +73,7 @@ onBeforeUnmount(() => { removeEventListener('keydown', key); ctx?.revert() })
       <div class="hero-scrim" />
       <div class="c-info"><span class="label">{{ c.type }}</span><span class="label">{{ c.sub }}</span><span
           class="label">{{ c.shots.length }} frames</span></div>
-      <h1 class="c-title" :style="{ '--n': c.title.length }"><span v-for="(ch, i) in c.title.toUpperCase().split('')"
+      <h1 class="c-title"><span v-for="(ch, i) in c.title.split('')"
           :key="i" class="mask"><span class="ch">{{ ch === ' ' ? '\u00A0' : ch }}</span></span></h1>
     </section>
     <section v-if="c.text.length" class="story">

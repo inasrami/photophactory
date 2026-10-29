@@ -355,6 +355,8 @@ const LENS_FX_KEYS = [
     "uDispersion", "uBlueRing", "uRimLine", "uVignette", "uZoom", "uRimTangential", "uRimInward",
 ] as const;
 
+// aspect ratio the lens is designed for (a typical desktop window); portrait screens reuse it so the glass looks identical
+const LENS_REF_ASPECT = 1.85;
 const REPEATS = 4;
 const CLICK_SLOP = 6;
 const TOUCH_CLICK_SLOP = 12;
@@ -1550,10 +1552,14 @@ function createCarousel(
             }
         }
 
+        // 📱 Portrait screens (phones): the lens used to be thinned out with the screen's aspect (0.42 * aspect), which
+        // turned the fat desktop lens into a thin diagonal ribbon. Now the lens is computed with the same proportions as
+        // on a desktop screen (LENS_REF_ASPECT), so it covers the same share of the screen with the same rim, glow and
+        // blue ring - just fitted to the phone's width. Desktop / landscape is untouched.
         const aspect = W / H;
-        lensUniforms.uAspect.value = aspect;
+        lensUniforms.uAspect.value = aspect < 1 ? LENS_REF_ASPECT : aspect;
         lensUniforms.uCenter.value.set(LENS.posX, LENS.posY);
-        lensUniforms.uSizeX.value = aspect < 1 ? 0.42 * aspect : LENS.sizeX;
+        lensUniforms.uSizeX.value = LENS.sizeX;
 
         const timeSec = now * 0.001;
         lensUniforms.uTime.value = timeSec;

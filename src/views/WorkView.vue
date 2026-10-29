@@ -11,8 +11,8 @@ const router = useRouter()
 
 // Build items once outside reactive overhead
 const items = collections.flatMap((collection) => {
-    const images = workWheelImages[collection.slug] ?? []
-    if (images.length === 0) console.warn('Work wheel images not configured:', collection.slug)
+    const images = workWheelImages[collection.key] ?? []
+    if (images.length === 0) console.warn('Work wheel images not configured:', collection.key)
     return images.map((src) => ({
         title: collection.title,
         src,

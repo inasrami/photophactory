@@ -624,6 +624,17 @@ body::after {
   top: 70%;
   background: radial-gradient(circle, rgba(58, 30, 78, 0.4), transparent 65%);
 }
+/* 📱 touch devices: the fixed background (3 huge animated gradients + masked conic dial) is re-composited under
+   every scroll frame on iOS Safari. Keep it static there. */
+@media (hover: none), (pointer: coarse) {
+  .orb {
+    animation: none;
+    will-change: auto;
+  }
+  .bk-dial {
+    display: none;
+  }
+}
 .bk-dial {
   will-change: transform; /* ⚡ OPTIMIZED: rotated on scroll -> keep it on the GPU instead of repainting the conic gradient */
   position: absolute;
@@ -753,7 +764,7 @@ body {
 
 /* ---- story text under the album hero ---- */
 .c-title {
-  font-size: clamp(2.6rem, min(11vw, calc(150vw / var(--n, 12))), 12rem);
+  font-size: clamp(2.6rem, 7.5vw, 9rem); /* same size for every album, whatever the name's length */
 }
 .story {
   display: grid;

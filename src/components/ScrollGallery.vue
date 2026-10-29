@@ -16,17 +16,33 @@ let ctx
 
 onMounted(() => {
     ctx = gsap.context(() => {
-        // ⚡ OPTIMIZED: was 3 + one-per-column separate ScrollTriggers (each with its own scrub + listener) all sharing the
-        // same trigger/range. One timeline = ONE ScrollTrigger driving every tween at position 0 -> identical motion.
-        const tl = gsap.timeline({
-            defaults: { ease: 'none', duration: 1 },
-            scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true },
+        const mm = gsap.matchMedia()
+
+        // Desktop / mouse: the full effect (parallax + inset reveal + zoom-out), one ScrollTrigger drives everything.
+        mm.add('(hover: hover) and (pointer: fine)', () => {
+            const tl = gsap.timeline({
+                defaults: { ease: 'none', duration: 1 },
+                scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true },
+            })
+            tl.fromTo(translateEl.value, { y: 0 }, { y: 384 }, 0)
+                .fromTo(insetEl.value, { clipPath: 'inset(0px 48px)' }, { clipPath: 'inset(0px 0px)' }, 0)
+                .fromTo(scaleEl.value, { scale: 1.2 }, { scale: 1 }, 0)
+            colEls.value.forEach((el, i) => {
+                if (el) tl.fromTo(el, { yPercent: 0 }, { yPercent: colSpeeds[i] ?? 0 }, 0)
+            })
         })
-        tl.fromTo(translateEl.value, { y: 0 }, { y: 384 }, 0)
-            .fromTo(insetEl.value, { clipPath: 'inset(0px 48px)' }, { clipPath: 'inset(0px 0px)' }, 0)
-            .fromTo(scaleEl.value, { scale: 1.2 }, { scale: 1 }, 0)
-        colEls.value.forEach((el, i) => {
-            if (el) tl.fromTo(el, { yPercent: 0 }, { yPercent: colSpeeds[i] ?? 0 }, 0)
+
+        // 📱 Touch (iOS Safari): native momentum scroll runs on the compositor, JS can't keep up with it.
+        // Animating clip-path (repaints every frame) and scaling a layer holding ~18 images is what made it lag,
+        // so on touch devices only the cheap column parallax stays (pure transforms, all on the GPU).
+        mm.add('(hover: none), (pointer: coarse)', () => {
+            const tl = gsap.timeline({
+                defaults: { ease: 'none', duration: 1 },
+                scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true },
+            })
+            colEls.value.forEach((el, i) => {
+                if (el) tl.fromTo(el, { yPercent: 0 }, { yPercent: (colSpeeds[i] ?? 0) * 0.5 }, 0)
+            })
         })
     }, root.value)
 })
@@ -57,6 +73,7 @@ onBeforeUnmount(() => ctx?.revert())
     position: relative;
     overflow: hidden;
     background: #000;
+    contain: layout paint; /* scroll-driven changes inside the gallery can't trigger repaints elsewhere */
 }
 
 .sg__fade {
@@ -80,7 +97,6 @@ onBeforeUnmount(() => ctx?.revert())
 }
 
 .sg__scale {
-    will-change: transform; /* ⚡ OPTIMIZED: scaled every scroll frame -> promote to its own layer */
     display: flex;
     gap: 0.5rem;
     padding: 0 1.5rem;
@@ -108,6 +124,9 @@ onBeforeUnmount(() => ctx?.revert())
 }
 
 .sg__item img {
+    transform: translateZ(0); /* own layer per image: Safari rasterises once instead of per frame */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     width: 100%;
     aspect-ratio: 4 / 2.5;
     object-fit: cover;
@@ -121,6 +140,12 @@ onBeforeUnmount(() => ctx?.revert())
 @media (min-width: 768px) {
     .sg__col--desktop {
         display: flex;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .sg__scale {
+        will-change: transform; /* only desktop scales this layer */
     }
 }
 </style>

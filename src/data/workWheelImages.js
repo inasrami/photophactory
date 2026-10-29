@@ -13,7 +13,6 @@ const image = (path) => {
 // Edit these paths to choose the photos shown for each Work page project.
 const imagePaths = {
   'cowgirl-kalina': ['portraits/cowgirl - Kalina/GK.webp'],
-  borislava: ['portraits/Borislava/b3.webp', 'portraits/Borislava/b2.webp'],
   elena: ['portraits/Elena/e1.webp', 'portraits/Elena/e2.webp'],
   elenac: ['portraits/Elenac/ec3.webp', 'portraits/Elenac/ec4.webp'],
   valeto: ['portraits/Valeto/v2.webp', 'portraits/Valeto/v3.webp'],
