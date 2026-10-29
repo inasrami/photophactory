@@ -746,10 +746,13 @@ function createCarousel(
     }
 
     const priorityLoads: Promise<void>[] = [];
+    const loadByIndex = new Map<number, Promise<void>>();
     const deferredIndices: number[] = [];
     for (let i = 0; i < N_SOURCES; i++) {
         if (priorityIndices.has(i)) {
-            priorityLoads.push(loadTexture(at(sources, i), at(items, i)));
+            const p = loadTexture(at(sources, i), at(items, i));
+            priorityLoads.push(p);
+            loadByIndex.set(i, p);
         } else {
             deferredIndices.push(i);
         }
@@ -767,20 +770,22 @@ function createCarousel(
         await Promise.all(workers);
     }
 
+    // wait only for the cards on screen at start (centre + its two neighbours), up to 8s
+    const heroLoads = [0, 1, N_SOURCES - 1]
+        .map((i) => loadByIndex.get(((i % N_SOURCES) + N_SOURCES) % N_SOURCES))
+        .filter((p): p is Promise<void> => !!p);
     const texturesReady = Promise.race([
-        Promise.all(priorityLoads),
-        new Promise<void>((r) => setTimeout(r, 2000)),
+        Promise.all(heroLoads),
+        new Promise<void>((r) => setTimeout(r, 8000)),
     ]);
-    texturesReady.then(() => {
-        if (running && deferredIndices.length > 0) {
-            loadDeferredQueue();
-        }
+    // the rest load in the background once every priority photo is in
+    Promise.all(priorityLoads).then(() => {
+        if (running && deferredIndices.length > 0) loadDeferredQueue();
     });
 
     let lastCenter = -1;
     const planeGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
-    const placeholder = new THREE.DataTexture(new Uint8Array([51, 51, 51, 255]), 1, 1);
-    placeholder.colorSpace = THREE.SRGBColorSpace;
+    const placeholder = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1); placeholder.colorSpace = THREE.SRGBColorSpace;
     placeholder.needsUpdate = true;
 
     const TOTAL_POOL = REPEATS * N_SOURCES;
