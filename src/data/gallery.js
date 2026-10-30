@@ -19,7 +19,28 @@ const projects = [
     sub: 'NOTO',
     cover: 'Fight1.webp',
     tall: 'Fight2.webp',
-    shots: ['Fight3.webp', 'Fight4.webp', 'Fight5.webp', 'Fight6.webp', 'Fight7.webp', 'Fight8.webp'],
+    shots: [
+      'Fight3.webp',
+      'Fight4.webp',
+      'Fight5.webp',
+      'Fight6.webp',
+      'Fight7.webp',
+      'Fight8.webp',
+      'Fight9.webp',
+      'Fight10.webp',
+      'Fight11.webp',
+      'Fight12.webp',
+      'Fight13.webp',
+      'Fight14.webp',
+      'Fight15.webp',
+      'Fight16.webp',
+      'Fight17.webp',
+      'Fight18.webp',
+      'Fight19.webp',
+      'Fight20.webp',
+      'Fight21.webp',
+      'Fight22.webp',
+    ],
   },
   {
     folder: 'portraits/Elena',
@@ -229,7 +250,7 @@ export const collections = projects.map((p) => {
   const name = parts.at(-1)
   const [title, sub = ''] = name.split(' - ')
 
-  const shots = p.shots.map((f) => photo(p.folder, f)).filter(Boolean)
+  const shots = [p.tall, ...p.shots].filter(Boolean).map((f) => photo(p.folder, f)).filter(Boolean)
   const cover = p.cover ? photo(p.folder, p.cover) : null
   const tall = p.tall ? photo(p.folder, p.tall) : null
 
@@ -246,7 +267,7 @@ export const collections = projects.map((p) => {
     // `slug` = what shows in the URL: the optional `slug` field of the project, else the folder-based one.
     key: slugify(name),
     slug: p.slug ? slugify(p.slug) : slugify(name),
-    all: [cover, tall, ...shots].filter(Boolean),
+    all: [cover, ...shots].filter(Boolean),
     shots,
     cover: (cover || shots[0])?.url,
     // ⚡ OPTIMIZED: the 280×360 hover preview on /work only needs the small WebP, not the 1920px one

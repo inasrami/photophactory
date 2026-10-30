@@ -617,60 +617,160 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ---------- Mobile: same blocks, same order, taller so the text fits ---------- */
-@media (max-width: 720px) {
+/* ---------- Mobile: blocks stack, photos get full width, text keeps a readable size ---------- */
+@media (max-width: 900px) {
   .about {
-    --block: max(112vw, 27rem);
+    --pad: clamp(1.4rem, 5vw, 3rem);
   }
 
+  .ab-b {
+    height: auto;
+    display: block;
+  }
+
+  /* 1. Hero: full-width portrait fading into black at the bottom, name sits in the lower part */
   .ab-b1 {
-    height: 88svh;
+    height: 100svh;
+    min-height: 34rem;
   }
 
   .ab-b1-photo {
-    width: 66%;
+    width: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
+  }
+
+  .ab-b1-photo::after {
+    background: linear-gradient(to top, rgb(0 0 0 / 0.75) 0%, transparent 55%);
   }
 
   .ab-name {
-    font-size: clamp(1.7rem, 8.4vw, 3rem);
+    top: auto;
+    bottom: clamp(3.5rem, 11svh, 6rem);
+    transform: none;
+    font-size: clamp(2rem, 11.5vw, 3.4rem);
     text-shadow: 0 0 22px rgb(0 0 0 / 0.85);
-    /* keeps the gold script readable where it crosses the portrait */
   }
 
-  .about .ab-hero-signature {
-    right: 8%;
-    bottom: 5%;
-    width: clamp(7rem, 34vw, 11rem);
+  .ab-name-line:last-child .ab-name-in {
+    padding-left: 0.9em;
+  }
+
+  .ab-vertical {
+    top: auto;
+    bottom: clamp(3.5rem, 11svh, 6rem);
+    transform: none;
+    right: 1rem;
+    font-size: 0.65rem;
+  }
+
+  /* 2. Live shows: photo on top, text panel under it */
+  .ab-b2-photo {
+    height: min(78vw, 36rem);
+  }
+
+  .ab-b2-photo img {
+    object-position: 60% 50%;
   }
 
   .ab-b2-panel {
-    padding: 1.2rem 1rem;
+    gap: 1.4rem;
+    padding: 2.2rem var(--pad) 2.6rem;
+  }
+
+  .ab-b2-title {
+    font-size: 0.85rem;
+  }
+
+  .ab-star {
+    width: 2rem;
   }
 
   .ab-b2-text {
-    font-size: clamp(0.56rem, 2.55vw, 0.78rem);
-    letter-spacing: 0.06em;
-    line-height: 1.8;
+    font-size: 0.8rem;
+    line-height: 1.9;
+    letter-spacing: 0.07em;
   }
 
+  /* 3. Text first, portrait under it */
   .ab-b3-text {
-    font-size: clamp(0.62rem, 2.9vw, 0.9rem);
-    padding: 0 0.6rem 0 1rem;
-    letter-spacing: 0.04em;
+    padding: 3.2rem var(--pad) 2.2rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+  }
+
+  .ab-b3-photo {
+    height: min(105vw, 44rem);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
+  }
+
+  /* 4. Gradient block: curved portrait on top, quote, signature, wordmark - all in normal flow */
+  .ab-b4 {
+    padding-bottom: 1.5rem;
+  }
+
+  .ab-b4-photo {
+    height: min(112vw, 46rem);
+    width: min(84%, 30rem);
+    margin: 0 auto;
+    /* centered arch */
+    border-radius: 50% 50% 0 0 / 28% 28% 0 0;
+  }
+
+  .ab-statement {
+    bottom: auto;
+    margin-top: 1.8rem;
+    padding: 0 var(--pad);
+    text-align: center;
   }
 
   .about .ab-statement p {
-    font-size: clamp(1.15rem, 5.4vw, 1.9rem);
+    font-size: clamp(1.3rem, 6.4vw, 2rem);
+    line-height: 1.25;
   }
 
+  .about .ab-hero-signature {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    display: block;
+    width: clamp(12rem, 62vw, 20rem);
+    margin: 1.4rem auto 0;
+  }
+
+  .about .ab-wordmark {
+    position: relative;
+    bottom: auto;
+    margin-top: 0.4rem;
+    font-size: 15.2vw;
+  }
+
+  /* footer */
   .ab-foot {
-    padding: 0 6vw 8vh;
+    padding: 0 var(--pad) 8vh;
   }
 
   .ab-contact {
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
+    padding: 3rem 0;
+  }
+
+  .about .ab-mail {
+    font-size: clamp(1.25rem, 6.2vw, 1.8rem);
+  }
+
+  .ab-links {
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .ab-cta {
+    padding-top: 1.6rem;
+    font-size: 1.4rem;
   }
 }
 </style>
