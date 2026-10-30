@@ -1,5 +1,8 @@
 // About page copy (Bulgarian)
 export const about = {
+  name: ['Krasimir', 'Djalev'],
+  role: 'Photographer',
+  liveLabel: 'Live shows',
   // Short line revealed by the Typer effect above the portrait.
   intro: 'Фотографията не е една естетика. Тя е нежна и дръзка, тиха и шумна, романтична и сурова.',
   label: 'Зад обектива',

@@ -27,6 +27,7 @@ const imagePaths = [
       alt: 'Ivan i Zdravka',
     },
     { path: 'portraits/Vika/vp4.webp', alt: 'Vika' },
+    { path: 'portraits/cowgirl - Kalina/ka1.webp', alt: 'Kalina' },
   ],
   [
     { path: 'portraits/Vikaskilim/vk1.webp', alt: 'Vikaskilim' },
